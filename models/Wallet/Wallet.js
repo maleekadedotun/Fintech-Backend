@@ -16,6 +16,11 @@ const walletSchema = new mongoose.Schema(
       type: String,
       default: "NGN",
     },
+    accountNumber: {
+      type: String,
+      unique: true,
+      required: true,
+    }
   },
   { timestamps: true }
 );

@@ -1,13 +1,14 @@
 import express from "express";
 
 import isLoggedIn from "../../middleware/isLogIn.js";
-import { creditWalletCtrl, getWalletCtrl, transferFundsCtrl } from "../../controllers/transaction/transaction.js";
+import { creditWalletCtrl, getTransactionsCtrl, getWalletCtrl, transferFundsCtrl } from "../../controllers/transaction/transaction.js";
 
-const walleRouter = express.Router();
+const walletRouter = express.Router();
+walletRouter.get("/", isLoggedIn, getWalletCtrl);
+walletRouter.get("/transactions", isLoggedIn, getTransactionsCtrl);
+walletRouter.post("/transfer", isLoggedIn, transferFundsCtrl);
 
-walleRouter.get("/:id", isLoggedIn, getWalletCtrl);
-walleRouter.post("/credit/:id", isLoggedIn, creditWalletCtrl);
-walleRouter.post("/transfer", isLoggedIn, transferFundsCtrl);
+walletRouter.post("/credit", isLoggedIn, creditWalletCtrl);
 
 
-export default walleRouter;
+export default walletRouter;

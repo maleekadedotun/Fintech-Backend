@@ -25,22 +25,21 @@ const transactionSchema = new mongoose.Schema(
       required: true,
     },
 
-    // reference: {
-    //   type: String,
-    //   // unique: true,
-    //   required: true,
-    // },
     reference: {
       type: String,
       required: true,
-      index: true, // optional, but good
+      unique: true,
     },
-
 
     status: {
       type: String,
       enum: ["pending", "success", "failed"],
-      default: "success",
+      default: "pending",
+    },
+
+    metadata: {
+      type: Object,
+      default: {},
     },
   },
   { timestamps: true }
