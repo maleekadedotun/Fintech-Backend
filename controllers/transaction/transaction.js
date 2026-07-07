@@ -1,8 +1,14 @@
-import Transaction from "../../models/Transaction.js/transaction.js";
+import Transaction from "../../models/Transaction/Transaction.js";
 import User from "../../models/User/user.js";
 import Wallet from "../../models/Wallet/Wallet.js";
 import crypto from "crypto";
 import mongoose from "mongoose";
+import { isNewDay } from "../../utils/helper.js";
+import createNotification from "../../helpers/createNotification.js";
+import { recordRevenue } from "../../helpers/revenueHelpers.js";
+import { createLedgerEntry } from "../../helpers/ledgerHelper.js";
+import verifyTransactionPin from "../../helpers/verifyTransactionPin.js";
+import { executeTransfer } from "../../services/executeTransferService.js";
 
 
 // Utility: generate transaction reference
@@ -23,423 +29,116 @@ export const getWalletCtrl = async (req, res) => {
   });
 };
 
-// export const getWalletCtrl = async (req, res) => {
-//   const wallet = await Wallet.findOne({ user: req.userAuth });
-
-//   if (!wallet) {
-//     return res.status(404).json({ message: "Wallet not found" });
-//   }
-
-//   const balance = Number(wallet.balance || 0);
-
-//   res.json({
-//     balance,
-//     currency: wallet.currency,
-//   });
-// };
-
-// INTERNAL CREDIT (used later by Stripe webhook)
 export const creditWalletCtrl = async (req, res) => {
   const { amount, category } = req.body;
-  const wallet = await Wallet.findOne({ user: req.userAuth });
-  if (!wallet) throw new Error("Wallet not found");
 
-  //   wallet.balance += amount;
-  wallet.balance = wallet.balance + Number(amount);
+  const wallet = await Wallet.findOne({ user: req.userAuth });
+
+  if (!wallet) {
+    throw new Error("Wallet not found");
+  }
+
+  const creditAmount = Number(amount);
+
+  const balanceBefore = wallet.balance;
+
+  wallet.balance += creditAmount;
+
+  const balanceAfter = wallet.balance;
 
   await wallet.save();
+
+  const reference = generateRef();
 
   const transaction = await Transaction.create({
     user: req.userAuth,
     type: "credit",
     category,
-    amount,
-    reference: generateRef(),
+    amount: creditAmount,
+    reference,
     status: "success",
   });
+
+  // Ledger entry
+  await createLedgerEntry({
+    user: wallet.user,
+    reference,
+    entryType: "credit",
+    amount: creditAmount,
+    balanceBefore,
+    balanceAfter,
+    narration: "Wallet funding",
+  });
+
   res.json({
     message: "Wallet credited successfully",
     data: transaction,
-  })
+  });
 };
-
-// @desc Transfer money (P2P)
-// @route POST /api/wallet/transfer
-
-// export const transferFundsCtrl = async (req, res) => {
-//   let { receiverEmail, amount } = req.body;
-
-//   // Convert amount to a number
-//   amount = Number(amount);
-
-//   if (isNaN(amount) || amount <= 0) {
-//     return res.status(400).json({ message: "Invalid amount" });
-//   }
-
-//   const senderWallet = await Wallet.findOne({ user: req.userAuth });
-
-//   if (!senderWallet) {
-//     return res.status(404).json({ message: "Sender wallet not found" });
-//   }
-
-//   if (senderWallet.balance < amount) {
-//     return res.status(400).json({ message: "Insufficient balance" });
-//   }
-
-//   const receiverUser = await User.findOne({ email: receiverEmail });
-
-//   if (!receiverUser) {
-//     return res.status(404).json({ message: "Receiver not found" });
-//   }
-
-//   const receiverWallet = await Wallet.findOne({
-//     user: receiverUser._id,
-//   });
-
-//   if (!receiverWallet) {
-//     return res.status(404).json({
-//       message: "Receiver wallet not found",
-//     });
-//   }
-
-//   // Ensure balances are treated as numbers
-//   senderWallet.balance = Number(senderWallet.balance) - amount;
-//   receiverWallet.balance =
-//     Number(receiverWallet.balance) + amount;
-
-//   await senderWallet.save();
-//   await receiverWallet.save();
-
-//   const reference = generateRef();
-
-//   const transferFunds = await Transaction.create([
-//     {
-//       user: senderWallet.user,
-//       type: "debit",
-//       category: "transfer",
-//       amount,
-//       reference,
-//     },
-//     {
-//       user: receiverWallet.user,
-//       type: "credit",
-//       category: "transfer",
-//       amount,
-//       reference,
-//     },
-//   ]);
-
-//   res.json({
-//     message: "Transfer successful",
-//     data: transferFunds,
-//   });
-// };
-
-
-// export const transferFundsCtrl = async (req, res) => {
-//   const { receiverEmail, amount } = req.body;
-
-//   const transferAmount = Number(amount);
-
-//   if (transferAmount <= 0) {
-//     return res.status(400).json({ message: "Invalid amount" });
-//   }
-
-//   try {
-//     // 1. Sender wallet
-//     const senderWallet = await Wallet.findOne({ user: req.userAuth });
-
-//     if (!senderWallet) {
-//       return res.status(404).json({ message: "Sender wallet not found" });
-//     }
-
-//     if (senderWallet.balance < transferAmount) {
-//       return res.status(400).json({ message: "Insufficient balance" });
-//     }
-
-//     // 2. Receiver user
-//     const receiverUser = await User.findOne({ email: receiverEmail });
-
-//     if (!receiverUser) {
-//       return res.status(404).json({ message: "Receiver not found" });
-//     }
-
-//     const receiverWallet = await Wallet.findOne({
-//       user: receiverUser._id,
-//     });
-
-//     if (!receiverWallet) {
-//       return res.status(404).json({ message: "Receiver wallet not found" });
-//     }
-
-//     const reference = generateRef();
-
-//     // 3. Create PENDING transactions FIRST
-//     const senderTx = await Transaction.create({
-//       user: senderWallet.user,
-//       type: "debit",
-//       category: "transfer",
-//       amount: transferAmount,
-//       reference,
-//       status: "pending",
-//       metadata: {
-//         receiver: receiverEmail,
-//       },
-//     });
-
-//     const receiverTx = await Transaction.create({
-//       user: receiverWallet.user,
-//       type: "credit",
-//       category: "transfer",
-//       amount: transferAmount,
-//       reference,
-//       status: "pending",
-//       metadata: {
-//         sender: senderWallet.user,
-//       },
-//     });
-
-//     // 4. Perform wallet updates
-//     senderWallet.balance -= transferAmount;
-//     receiverWallet.balance += transferAmount;
-
-//     await senderWallet.save();
-//     await receiverWallet.save();
-
-//     // 5. Mark transactions SUCCESS
-//     senderTx.status = "success";
-//     receiverTx.status = "success";
-
-//     await senderTx.save();
-//     await receiverTx.save();
-
-//     return res.json({
-//       message: "Transfer successful",
-//       reference,
-//     });
-//   } catch (error) {
-//     console.error(error);
-
-//     return res.status(500).json({
-//       message: "Transfer failed",
-//     });
-//   }
-// };
-
-// export const transferFundsCtrl = async (req, res) => {
-//   const { accountNumber, amount } = req.body;
-
-//   const transferAmount = Number(amount);
-
-//   if (!accountNumber) {
-//     return res.status(400).json({ message: "Account number is required" });
-//   }
-
-//   if (transferAmount <= 0) {
-//     return res.status(400).json({ message: "Invalid amount" });
-//   }
-
-//   try {
-//     // 1. Sender wallet
-//     const senderWallet = await Wallet.findOne({ user: req.userAuth });
-
-//     if (!senderWallet) {
-//       return res.status(404).json({ message: "Sender wallet not found" });
-//     }
-
-//     if (senderWallet.balance < transferAmount) {
-//       return res.status(400).json({ message: "Insufficient balance" });
-//     }
-
-//     // 2. Receiver wallet (BY ACCOUNT NUMBER)
-//     const receiverWallet = await Wallet.findOne({
-//       accountNumber,
-//     });
-
-//     if (!receiverWallet) {
-//       return res.status(404).json({ message: "Invalid account number" });
-//     }
-
-//     // prevent sending to self
-//     if (senderWallet.accountNumber === accountNumber) {
-//       return res.status(400).json({
-//         message: "You cannot transfer to yourself",
-//       });
-//     }
-
-//     const reference = generateRef();
-
-//     // 3. Create PENDING transactions
-//     const senderTx = await Transaction.create({
-//       user: senderWallet.user,
-//       type: "debit",
-//       category: "transfer",
-//       amount: transferAmount,
-//       reference,
-//       status: "pending",
-//       metadata: {
-//         accountNumber,
-//       },
-//     });
-
-//     const receiverTx = await Transaction.create({
-//       user: receiverWallet.user,
-//       type: "credit",
-//       category: "transfer",
-//       amount: transferAmount,
-//       reference,
-//       status: "pending",
-//       metadata: {
-//         senderAccountNumber: senderWallet.accountNumber,
-//       },
-//     });
-
-//     // 4. Update wallets
-//     senderWallet.balance -= transferAmount;
-//     receiverWallet.balance += transferAmount;
-
-//     await senderWallet.save();
-//     await receiverWallet.save();
-
-//     // 5. Mark transactions SUCCESS
-//     senderTx.status = "success";
-//     receiverTx.status = "success";
-
-//     await senderTx.save();
-//     await receiverTx.save();
-
-//     return res.json({
-//       message: "Transfer successful",
-//       reference,
-//       from: senderWallet.accountNumber,
-//       to: receiverWallet.accountNumber,
-//     });
-//   } catch (error) {
-//     console.error(error);
-
-//     return res.status(500).json({
-//       message: "Transfer failed",
-//     });
-//   }
-// };
-
 
 export const transferFundsCtrl = async (req, res) => {
-  let { accountNumber, amount } = req.body;
-
-  amount = Number(amount);
-
-  if (!accountNumber) {
-    return res.status(400).json({ message: "Account number is required" });
-  }
-
-  if (isNaN(amount) || amount <= 0) {
-    return res.status(400).json({ message: "Invalid amount" });
-  }
-
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
   try {
-    const senderWallet = await Wallet.findOne({ user: req.userAuth }).session(session);
+    const {
+      accountNumber,
+      amount,
+      transactionPin,
+    } = req.body;
 
-    if (!senderWallet) {
-      throw new Error("Sender wallet not found");
-    }
+    const result = await executeTransfer({
+      senderUserId: req.userAuth,
+      receiverAccountNumber: accountNumber,
+      amount,
+      transactionPin,
+    });
 
-    const receiverWallet = await Wallet.findOne({ accountNumber }).session(session);
-
-    if (!receiverWallet) {
-      throw new Error("Invalid account number");
-    }
-
-    if (senderWallet.accountNumber === accountNumber) {
-      return res.status(400).json({ message: "You cannot transfer to yourself" });
-    }
-
-    if (senderWallet.balance < amount) {
-      return res.status(400).json({ message: "Insufficient balance" });
-    }
-
-    const reference = generateRef();
-
-    // atomic updates inside transaction
-    await Wallet.updateOne(
-      { user: senderWallet.user },
-      { $inc: { balance: -amount } },
-      { session }
-    );
-
-    await Wallet.updateOne(
-      { accountNumber },
-      { $inc: { balance: amount } },
-      { session }
-    );
-
-    await Transaction.insertMany(
-      [
-        {
-          user: senderWallet.user,
-          type: "debit",
-          category: "transfer",
-          amount,
-          reference,
-          status: "success",
-          metadata: { accountNumber },
-        },
-        {
-          user: receiverWallet.user,
-          type: "credit",
-          category: "transfer",
-          amount,
-          reference,
-          status: "success",
-          metadata: {
-            senderAccountNumber: senderWallet.accountNumber,
-          },
-        },
-      ],
-      { session }
-    );
-
-    await session.commitTransaction();
-    session.endSession();
-
-    return res.json({
+    return res.status(200).json({
       message: "Transfer successful",
-      reference,
+      ...result,
     });
   } catch (error) {
-    await session.abortTransaction();
-    session.endSession();
-
-    return res.status(500).json({
-      message: error.message || "Transfer failed",
+    return res.status(400).json({
+      message: error.message,
     });
   }
 };
-
 
 export const getTransactionsCtrl = async (req, res) => {
   try {
-    const { type, category } = req.query;
+    const { type, category, page = 1, limit = 10, startDate, endDate } = req.query;
 
-    // build filter dynamically
     let filter = { user: req.userAuth };
 
-    if (type) {
-      filter.type = type; // credit or debit
+    // filters
+    if (type) filter.type = type;
+    if (category) filter.category = category;
+
+    // date filter (bank-like history)
+    if (startDate || endDate) {
+      filter.createdAt = {};
+
+      if (startDate) {
+        filter.createdAt.$gte = new Date(startDate);
+      }
+
+      if (endDate) {
+        filter.createdAt.$lte = new Date(endDate);
+      }
     }
 
-    if (category) {
-      filter.category = category; // transfer, wallet_fund, etc.
-    }
+    const skip = (page - 1) * limit;
 
     const transactions = await Transaction.find(filter)
       .sort({ createdAt: -1 })
-      .limit(50); // simple safety limit for now
+      .skip(skip)
+      .limit(Number(limit));
+
+    const total = await Transaction.countDocuments(filter);
 
     res.json({
+      page: Number(page),
+      limit: Number(limit),
+      total,
+      pages: Math.ceil(total / limit),
       count: transactions.length,
       transactions,
     });
@@ -452,3 +151,201 @@ export const getTransactionsCtrl = async (req, res) => {
 };
 
 
+export const lookupAccountCtrl = async (req, res) => {
+  try {
+    const { accountNumber } = req.params;
+
+    if (!accountNumber) {
+      return res.status(400).json({
+        message: "Account number is required",
+      });
+    }
+
+    const wallet = await Wallet.findOne({
+      accountNumber,
+    }).populate("user", "name");
+
+    if (!wallet) {
+      return res.status(404).json({
+        message: "Account not found",
+      });
+    }
+
+    return res.status(200).json({
+      accountName: wallet.user.name,
+      accountNumber: wallet.accountNumber,
+    });
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      message: "Error looking up account",
+    });
+  }
+};
+
+
+export const getWalletAnalyticsCtrl = async (req, res) => {
+  try {
+    const userId = await User.findById(req.userAuth);
+
+    const wallet = await Wallet.findOne({ user: userId });
+
+    if (!wallet) {
+      return res.status(404).json({
+        message: "Wallet not found",
+      });
+    }
+
+    // Total sent
+    const totalSentAgg = await Transaction.aggregate([
+      {
+        $match: {
+          user: wallet.user,
+          type: "debit",
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: "$amount" },
+        },
+      },
+    ]);
+
+    // Total received
+    const totalReceivedAgg = await Transaction.aggregate([
+      {
+        $match: {
+          user: wallet.user,
+          type: "credit",
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: "$amount" },
+        },
+      },
+    ]);
+
+    const totalSent = totalSentAgg[0]?.total || 0;
+    const totalReceived = totalReceivedAgg[0]?.total || 0;
+
+    // Today filter
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const todaySentAgg = await Transaction.aggregate([
+      {
+        $match: {
+          user: wallet.user,
+          type: "debit",
+          createdAt: { $gte: startOfDay },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: "$amount" },
+        },
+      },
+    ]);
+
+    const todayReceivedAgg = await Transaction.aggregate([
+      {
+        $match: {
+          user: wallet.user,
+          type: "credit",
+          createdAt: { $gte: startOfDay },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: "$amount" },
+        },
+      },
+    ]);
+
+    return res.json({
+      balance: wallet.balance,
+      currency: wallet.currency,
+      totalSent,
+      totalReceived,
+      todaySpent: todaySentAgg[0]?.total || 0,
+      todayReceived: todayReceivedAgg[0]?.total || 0,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message || "Analytics error",
+    });
+  }
+};
+
+// get all wallet
+export const getAllWalletCtrl = async (req, res) => {
+  try {
+    const wallets = await Wallet.find();
+    return res.json({
+      status: "success",
+      data: wallets
+    })
+
+  } catch (error) {
+    return res.json(error.message)
+  }
+};
+
+export const getVirtualAccountCtrl = async (req, res) => {
+  const wallet = await Wallet.findOne({
+    user: req.userAuth,
+  });
+  const user = await User.findById(req.userAuth)
+
+  if (!wallet) {
+    return res.status(404).json({
+      message: "Wallet not found",
+    });
+  }
+
+  res.json({
+    accountName: user.name,
+    accountNumber: wallet.accountNumber,
+    bankName: wallet.bankName,
+  });
+};
+
+export const simulateBankTransferCtrl = async (req, res) => {
+  const { accountNumber, amount } = req.body;
+
+  const wallet = await Wallet.findOne({
+    accountNumber,
+  });
+
+  if (!wallet) {
+    return res.status(404).json({
+      message: "Account not found",
+    });
+  }
+
+  wallet.balance += Number(amount);
+
+  await wallet.save();
+
+  await Transaction.create({
+    user: wallet.user,
+    type: "credit",
+    category: "wallet_fund",
+    amount,
+    status: "success",
+    reference: generateRef(),
+    metadata: {
+      source: "bank_transfer",
+    },
+  });
+
+  res.json({
+    message: "Wallet credited successfully",
+  });
+};

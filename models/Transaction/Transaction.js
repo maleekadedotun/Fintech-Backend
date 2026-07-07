@@ -28,7 +28,7 @@ const transactionSchema = new mongoose.Schema(
     reference: {
       type: String,
       required: true,
-      unique: true,
+      // unique: true,
     },
 
     status: {
@@ -37,9 +37,34 @@ const transactionSchema = new mongoose.Schema(
       default: "pending",
     },
 
+    reversed: {
+      type: Boolean,
+      default: false,
+    },
+
+    reversalReference: {
+      type: String,
+    },
     metadata: {
       type: Object,
       default: {},
+    },
+    reversed: {
+      type: Boolean,
+      default: false,
+    },
+
+    reversedAt: {
+      type: Date,
+    },
+
+    reversedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+
+    reversalReference: {
+      type: String,
     },
   },
   { timestamps: true }

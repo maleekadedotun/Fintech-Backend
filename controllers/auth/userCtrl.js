@@ -3,6 +3,7 @@ import Wallet from "../../models/Wallet/Wallet.js";
 import bcrypt from "bcryptjs";
 import generateToken from "../../utils/generateToken.js";
 import crypto from "crypto";
+// import generateAccountNumber from "../../utils/generateAccountNumber.js";
 // generateToken
 // import generateToken from "../utils/generateToken.js";
 
@@ -12,44 +13,6 @@ export const generateAccountNumber = () => {
 
 // @desc Register user
 // @route POST /api/auth/register
-// export const registerUserCtrl = async (req, res) => {
-//   const { name, email, password } = req.body;
-
-//   const userExists = await User.findOne({ email });
-//   if (userExists) {
-//     return res.status(400).json({ message: "User already exists" });
-//   }
-
-//   //hash password
-//   const salt = await bcrypt.genSalt(10);
-//   const hashedPassword = await bcrypt.hash(password, salt);
-//   const user = await User.create({
-//     name,
-//     email,
-//     password: hashedPassword
-//   });
-
-//   const accountNumber = await Wallet.create({
-//     user: user._id,
-//     balance: 0,
-//     accountNumber: generateAccountNumber(),
-//   });
-
-
-//   // AUTO-CREATE WALLET
-//   // await Wallet.create({
-//   //   user: user._id,
-//   //   balance: 0,
-//   //   accountNumber: generateAccountNumber(),
-//   // });
-
-//   res.status(201).json({
-//     status: "success",
-//     data: user,
-//     accountNumber,
-//     // token: generateToken(user._id),
-//   });
-// };
 
 export const registerUserCtrl = async (req, res) => {
   const { name, email, password } = req.body;
@@ -80,7 +43,10 @@ export const registerUserCtrl = async (req, res) => {
   res.status(201).json({
     status: "success",
     data: user,
+    accountName: user.name,
     accountNumber: wallet.accountNumber,
+    // accountNumber: generateAccountNumber(),
+    bankName: wallet.bankName,
   });
 };
 // @desc Login user

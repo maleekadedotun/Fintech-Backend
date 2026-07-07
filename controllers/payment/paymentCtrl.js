@@ -7,7 +7,7 @@ import Wallet from "../../models/Wallet/Wallet.js";
 // import WebhookLog from "../models/WebhookLog.js";
 import crypto from "crypto";
 import WebhookLog from "../../models/webHook/webhookLog.js";
-import Transaction from "../../models/Transaction.js/transaction.js";
+import Transaction from "../../models/Transaction/Transaction.js";
 
 import dotenv from "dotenv";
 dotenv.config();

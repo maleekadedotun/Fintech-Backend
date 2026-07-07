@@ -20,7 +20,29 @@ const walletSchema = new mongoose.Schema(
       type: String,
       unique: true,
       required: true,
-    }
+    },
+    bankName: {
+      type: String,
+      default: "Fintech Demo Bank",
+    },
+    // accountName: {
+    //   type: String,
+    //   default: null,
+    // },
+    dailyLimit: {
+      type: Number,
+      default: 50000, // default ₦50,000
+    },
+
+    dailySpent: {
+      type: Number,
+      default: 0,
+    },
+
+    lastTransactionDate: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true }
 );
