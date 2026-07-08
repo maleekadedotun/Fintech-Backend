@@ -25,6 +25,7 @@ import statementRoutes from "./routes/statement/statementRoutes.js";
 import scheduleRoutes from "./routes/schedule/scheduleRoutes.js";
 import "./cron/scheduleTransferCron.js";
 import { initializeSocket } from "./socket/socket.js";
+import testRouter from "./routes/test/testRoutes.js";
 // import stripe from "./config/stripe.js";
 
 connectDB();
@@ -57,6 +58,7 @@ app.use("/api/v1/withdrawal", withdrawalRoutes);
 app.use("/api/v1/pin", pinRoutes);
 app.use("/api/v1/statement", statementRoutes);
 app.use("/api/v1/schedule", scheduleRoutes);
+app.use("/api/v1/test", testRouter);
 // console.log("Stripe key:", process.env.STRIPE_SECRET_KEY);
 
 const io = new Server(server, {

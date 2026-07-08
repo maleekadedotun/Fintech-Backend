@@ -132,24 +132,43 @@ export const getDataPlansCtrl = async (req, res) => {
 // controllers/data/buyDataCtrl.js
 
 
+// export const buyDataCtrl = async (req, res) => {
+//   try {
+//     const result = await buyData({
+//       userId: req.userAuth,
+//       phoneNumber: req.body.phoneNumber,
+//       network: req.body.network,
+//       planId: req.body.planId,
+//       amount: req.body.amount,
+//       pin: req.body.pin,
+//     });
+
+//     return res.status(200).json({
+//       status: "success",
+//       data: result,
+//     });
+//   } catch (error) {
+//     return res.status(400).json({
+//       message: error.message,
+//     });
+//   }
+// };
+
 export const buyDataCtrl = async (req, res) => {
   try {
     const result = await buyData({
       userId: req.userAuth,
-      phoneNumber: req.body.phoneNumber,
-      network: req.body.network,
+      phone: req.body.phoneNumber,
+      networkId: req.body.networkId,
       planId: req.body.planId,
-      amount: req.body.amount,
       pin: req.body.pin,
+      amount: req.body.amount,
     });
 
-    return res.status(200).json({
-      status: "success",
-      data: result,
-    });
-  } catch (error) {
-    return res.status(400).json({
-      message: error.message,
+    res.status(200).json(result);
+  } catch (err) {
+    res.status(400).json({
+      message: err.message,
     });
   }
 };
