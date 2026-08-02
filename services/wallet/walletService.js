@@ -52,6 +52,10 @@ export const debitWallet = async ({ userId, amount, session }) => {
     //     balanceBefore,
     //     balanceAfter,
     // };
+    console.log("Debit",{
+        amount,
+        amountType: typeof amount,
+    });
 
 
     const updatedWallet = await Wallet.findOneAndUpdate(
@@ -84,12 +88,39 @@ export const debitWallet = async ({ userId, amount, session }) => {
         balanceAfter: updatedWallet.balance,
     };
 };
+// accountNumber
 
-export const creditWallet = async ({ accountNumber, amount, session, }) => {
+// export const creditWallet = async ({ userId, amount, session, }) => {
 
-    const wallet = await Wallet.findOne({
-        accountNumber,
-    }).session(session);
+//     console.log("creditWallet userId:", userId);
+//     const wallet = await Wallet.findOne({
+//         // accountNumber,
+//         user: userId,
+//     }).session(session);
+
+//     if (!wallet) {
+//         throw new Error("Wallet not found credit");
+//     }
+
+//     const balanceBefore = wallet.balance;
+//     const balanceAfter = balanceBefore + amount;
+
+//     wallet.balance = balanceAfter;
+
+//     await wallet.save({ session });
+
+//     return {
+//         wallet,
+//         balanceBefore,
+//         balanceAfter,
+//     };
+// };
+
+export const creditWallet = async ({
+    wallet,
+    amount,
+    session,
+}) => {
 
     if (!wallet) {
         throw new Error("Wallet not found");

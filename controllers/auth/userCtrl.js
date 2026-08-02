@@ -15,7 +15,7 @@ export const generateAccountNumber = () => {
 // @route POST /api/auth/register
 
 export const registerUserCtrl = async (req, res) => {
-  const { name, email, password } = req.body;
+  const { name, email, password, phoneNumber } = req.body;
 
   const userExists = await User.findOne({ email });
 
@@ -30,6 +30,7 @@ export const registerUserCtrl = async (req, res) => {
   const user = await User.create({
     name,
     email,
+    phoneNumber,
     password: hashedPassword,
   });
 

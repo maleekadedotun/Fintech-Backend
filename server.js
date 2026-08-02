@@ -26,6 +26,12 @@ import scheduleRoutes from "./routes/schedule/scheduleRoutes.js";
 import "./cron/scheduleTransferCron.js";
 import { initializeSocket } from "./socket/socket.js";
 import testRouter from "./routes/test/testRoutes.js";
+import cableRouter from "./routes/cable/cableRoutes.js";
+import electricityRoute from "./routes/electricity/electricityroute.js";
+import internetRouter from "./routes/internet/internetRoutes.js";
+import educationRouter from "./routes/education/educationRoutes.js";
+import bettingRouter from "./routes/betting/bettngRoutes.js";
+import insuranceRoutes from "./routes/insurance/insuranceRoutes.js";
 // import stripe from "./config/stripe.js";
 
 connectDB();
@@ -59,7 +65,19 @@ app.use("/api/v1/pin", pinRoutes);
 app.use("/api/v1/statement", statementRoutes);
 app.use("/api/v1/schedule", scheduleRoutes);
 app.use("/api/v1/test", testRouter);
+app.use("/api/v1/cable", cableRouter);
+app.use("/api/v1/electricity", electricityRoute);
+app.use("/api/v1/internet", internetRouter);
+app.use("/api/v1/education", educationRouter);
+app.use("/api/v1/betting", bettingRouter);
+app.use("/api/v1/insurance", insuranceRoutes);
 // console.log("Stripe key:", process.env.STRIPE_SECRET_KEY);
+
+// console.log({
+//   apiKey: process.env.VTPASS_API_KEY,
+//   publicKey: process.env.VTPASS_PUBLISHABLE_KEY,
+//   secretKey: process.env.VTPASS_SECRET_KEY,
+// });
 
 const io = new Server(server, {
   cors: {

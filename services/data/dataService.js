@@ -80,6 +80,10 @@ import { debitWallet } from "../wallet/walletService.js";
 import { emitWalletUpdate } from "../../socket/socketEmitter.js";
 import { buyDataBundle } from "../../helpers/provider/dataProvider.js";
 import { getDataPlans, purchaseData } from "../providers/smePlug/data.js";
+import normalizeProviderResponse from "../../helpers/normalizeProviderResponse.js";
+import providerFactory from "../providers/factory/providerFactory.js";
+import createPendingTransaction from "../../helpers/createPendingTransaction.js";
+import validateProviderResponse from "../../helpers/validateProviderResponse.js";
 
 // import { buyDataBundle } from "../../helpers/providers/dataProvider.js";
 
@@ -403,9 +407,12 @@ export const buyData = async ({
         //     : Object.values(plansResponse.data);
 
         // Object.values => convert object to array
-        const plans = Array.isArray(plansResponse.data)
-            ? plansResponse.data.flat()
-            : Object.values(plansResponse.data).flat();
+        // const plans = Array.isArray(plansResponse.data)
+        //     ? plansResponse.data.flat()
+        //     : Object.values(plansResponse.data).flat();
+        const plans = normalizeProviderResponse(
+            plansResponse.data
+        );
 
         console.log("========= PLAN DEBUG =========");
         console.log("Received planId:", planId);
@@ -438,54 +445,108 @@ export const buyData = async ({
         }
 
         // Debit wallet
-        const sender = await debitWallet({
+        // const sender = await debitWallet({
+        //     userId,
+        //     amount,
+        //     session,
+        // });
+
+        // const reference = generateRef();
+
+        // // Create pending transaction
+        // const [transaction] = await Transaction.create(
+        //     [
+        //         {
+        //             user: userId,
+        //             type: "debit",
+        //             category: "data",
+        //             amount,
+        //             reference,
+        //             status: "pending",
+        //             metadata: {
+        //                 phone,
+        //                 networkId,
+        //                 planId,
+        //             },
+        //         },
+        //     ],
+        //     { session }
+        // );
+
+        const {
+            sender,
+            transaction,
+            reference,
+        } = await createPendingTransaction({
             userId,
             amount,
+            category: "data",
+            metadata: {
+                phone,
+                networkId,
+                planId,
+            },
             session,
         });
 
-        const reference = generateRef();
-
-        // Create pending transaction
-        const [transaction] = await Transaction.create(
-            [
-                {
-                    user: userId,
-                    type: "debit",
-                    category: "data",
-                    amount,
-                    reference,
-                    status: "pending",
-                    metadata: {
-                        phone,
-                        networkId,
-                        planId,
-                    },
-                },
-            ],
-            { session }
-        );
-
+        const provider = providerFactory("data")
         // Purchase from SMEPlug
-        const provider = await purchaseData({
+        // const provider = await purchaseData({
+        //     networkId,
+        //     planId,
+        //     phone,
+        //     reference,
+        // });
+        const response = await provider.purchaseDataBundle({
             networkId,
             planId,
             phone,
             reference,
         });
 
-        if (
-            !provider.status ||
-            provider.data.current_status !== "successful"
-        ) {
-            transaction.status = "failed";
+        // if (
+        //     !response.status ||
+        //     provider.data.current_status !== "successful"
+        // ) {
+        //     transaction.status = "failed";
 
-            await transaction.save({ session });
+        //     await transaction.save({ session });
 
-            throw new Error(
-                provider.data.msg || "Data purchase failed"
-            );
-        }
+        //     throw new Error(
+        //         response.data.msg || "Data purchase failed"
+        //     );
+        //     res.status(error.statusCode || 500).json({
+        //         success: false,
+        //         message: error.message,
+        //         provider: error.provider || null,
+        //     });
+        // }
+
+        // if (
+        //     !response.status ||
+        //     response.data.current_status !== "successful"
+        // ) {
+        //     transaction.status = "failed";
+
+        //     await transaction.save({ session });
+
+        //     const error = new Error(
+        //         response.data.msg || "Data purchase failed"
+        //     );
+
+        //     error.statusCode = 400;
+        //     error.provider = response;
+
+        //     throw error;
+        // }
+        // failed message
+        await validateProviderResponse({
+            response,
+            transaction,
+            sender,
+            session,
+            defaultMessage: "Data purchase failed",
+        });
 
         // Mark successful
         transaction.status = "success";

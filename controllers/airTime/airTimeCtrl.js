@@ -22,7 +22,7 @@ export const buyAirTimeCtrl = async (req, res) => {
 
       userId: req.userAuth,
       phoneNumber: req.body.phoneNumber,
-      network: req.body.network,
+      networkId: req.body.networkId,
       amount: req.body.amount,
       pin: req.body.pin,
     });
@@ -139,12 +139,27 @@ export const buyAirTimeCtrl = async (req, res) => {
   } catch (error) {
     if (session && session.inTransaction()) {
       await session.abortTransaction();
-
     }
+    // if (error.response?.status === 502) {
 
-    return res.status(400).json({
+    //   throw {
+    //     statusCode: 502,
+    //     message: "SMEPlug is temporarily unavailable. Please try again shortly.",
+    //     provider: error.response.data,
+    //   };
+
+    // }
+
+    res.status(error.statusCode || 500).json({
+      success: false,
       message: error.message,
+      provider: error.provider || null,
     });
+    // return error;
+
+    // return res.status(400).json({
+    //   message: error.message,
+    // });
   } finally {
     session.endSession();
   }

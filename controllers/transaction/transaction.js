@@ -20,7 +20,7 @@ export const getWalletCtrl = async (req, res) => {
   const wallet = await Wallet.findOne({ user: req.userAuth });
 
   if (!wallet) {
-    return res.status(404).json({ message: "Wallet not found" });
+    return res.status(404).json({ message: "Wallet not founds" });
   }
 
   res.json({
@@ -35,7 +35,7 @@ export const creditWalletCtrl = async (req, res) => {
   const wallet = await Wallet.findOne({ user: req.userAuth });
 
   if (!wallet) {
-    throw new Error("Wallet not found");
+    throw new Error("Wallet not founds");
   }
 
   const creditAmount = Number(amount);
@@ -93,7 +93,7 @@ export const transferFundsCtrl = async (req, res) => {
 
     return res.status(200).json({
       message: "Transfer successful",
-      ...result,
+      data: result,
     });
   } catch (error) {
     return res.status(400).json({
@@ -104,13 +104,14 @@ export const transferFundsCtrl = async (req, res) => {
 
 export const getTransactionsCtrl = async (req, res) => {
   try {
-    const { type, category, page = 1, limit = 10, startDate, endDate } = req.query;
+    const { type, category, status, page = 1, limit = 10, startDate, endDate } = req.query;
 
     let filter = { user: req.userAuth };
 
     // filters
     if (type) filter.type = type;
     if (category) filter.category = category;
+    if (status) filter.status = status;
 
     // date filter (bank-like history)
     if (startDate || endDate) {
@@ -333,7 +334,7 @@ export const simulateBankTransferCtrl = async (req, res) => {
 
   await wallet.save();
 
-  await Transaction.create({
+  const transaction = await Transaction.create({
     user: wallet.user,
     type: "credit",
     category: "wallet_fund",
@@ -347,5 +348,46 @@ export const simulateBankTransferCtrl = async (req, res) => {
 
   res.json({
     message: "Wallet credited successfully",
+    data: transaction
   });
+};
+
+// all transactions
+export const getAllTransactionsCtrl = async (req, res) => {
+  try {
+    const transactions = await Transaction.find().sort({ createdAt: -1 });
+
+    res.json({
+      data: transactions
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error fetching transactions",
+      error: error.message,
+    });
+  }
+};
+
+// single transaction
+export const getSingleTransactionCtrl = async (req, res) => {
+  try {
+    const transactionId  = req.params.id;
+
+    const transaction = await Transaction.findById(transactionId);
+
+    if (!transaction) {
+      return res.status(404).json({
+        message: "Transaction not found",
+      });
+    }
+
+    res.json({
+      data: transaction
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error fetching transaction",
+      error: error.message,
+    });
+  }
 };

@@ -72,7 +72,8 @@ export const executeTransfer = async ({ senderUserId, receiverAccountNumber, amo
         // Sender wallet
         const senderWallet = await Wallet.findOne({
             user: senderUserId,
-        }).session(session);
+        }).populate("user", "name").session(session);
+        console.log("senderWallet 101:", senderWallet);
 
         if (!senderWallet) {
             throw new Error("Sender wallet not found");
@@ -95,9 +96,11 @@ export const executeTransfer = async ({ senderUserId, receiverAccountNumber, amo
         // Receiver wallet
         const receiverWallet = await Wallet.findOne({
             accountNumber: receiverAccountNumber,
-        })
-            .session(session)
-            .populate("user", "name isFrozen");
+        }).populate("user", "name");
+        console.log("receiverWallet 101:", receiverWallet);
+
+        // .session(session)
+        // .populate("user", "name isFrozen");
 
         if (!receiverWallet) {
             throw new Error("Invalid account number");
@@ -123,6 +126,49 @@ export const executeTransfer = async ({ senderUserId, receiverAccountNumber, amo
         const reference = generateRef();
 
         // Create pending transactions
+        // await Transaction.insertMany(
+        //     [
+        //         {
+        //             user: senderWallet.user,
+        //             type: "debit",
+        //             category: "transfer",
+        //             amount,
+        //             reference,
+        //             status: "pending",
+        //             metadata: {
+        //                 receiverName: receiverWallet.user.name,
+        //                 receiverAccountNumber: receiverWallet.accountNumber,
+        //                 // receiverName: receiverWallet.bankName,
+        //                 // receiverAccountNumber: receiver.wallet.accountNumber,
+        //                 // senderName: sender.name,
+        //                 // senderAccountNumber: sender.wallet.accountNumber,
+        //                 narration: "Wallet Transfer",
+        //                 charges: 0
+        //             },
+        //         },
+        //         {
+        //             user: receiverWallet.user._id,
+        //             type: "credit",
+        //             category: "transfer",
+        //             amount,
+        //             reference,
+        //             status: "pending",
+        //             metadata: {
+        //                 senderAccountNumber: senderWallet.accountNumber,
+        //             },
+        //         },
+        //     ],
+        //     { session }
+        // );
+
+        console.log("DEBIT METADATA");
+        console.dir({
+            receiverName: receiverWallet.user.name,
+            receiverAccountNumber: receiverWallet.accountNumber,
+            narration: "Wallet Transfer",
+            charges: 0,
+        }, { depth: null });
+
         await Transaction.insertMany(
             [
                 {
@@ -133,24 +179,38 @@ export const executeTransfer = async ({ senderUserId, receiverAccountNumber, amo
                     reference,
                     status: "pending",
                     metadata: {
-                        receiverAccountNumber,
+                        senderName: user.name,
+                        senderAccountNumber: senderWallet.accountNumber,
+
+                        receiverName: receiverWallet.user.name,
+                        receiverAccountNumber: receiverWallet.accountNumber,
+
+                        narration: "Wallet Transfer",
+                        charges: 0,
                     },
                 },
                 {
-                    user: receiverWallet.user._id,
+                    user: receiverWallet.user,
                     type: "credit",
                     category: "transfer",
                     amount,
                     reference,
                     status: "pending",
                     metadata: {
-                        senderAccountNumber:
-                            senderWallet.accountNumber,
+                        senderName: user.name,
+                        senderAccountNumber: senderWallet.accountNumber,
+
+                        receiverName: receiverWallet.user.name,
+                        receiverAccountNumber: receiverWallet.accountNumber,
+
+                        narration: "Wallet Transfer",
+                        charges: 0,
                     },
                 },
             ],
             { session }
         );
+
         // Debit sender
         // await Wallet.updateOne(
         //     { user: senderWallet.user },
@@ -185,7 +245,10 @@ export const executeTransfer = async ({ senderUserId, receiverAccountNumber, amo
         // );
 
         const receiver = await creditWallet({
-            accountNumber: receiverAccountNumber,
+            // accountNumber: receiverAccountNumber,
+            // userId,
+            // senderUserId,
+            wallet: receiverWallet,
             amount,
             session,
         });

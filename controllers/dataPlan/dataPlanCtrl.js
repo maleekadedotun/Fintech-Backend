@@ -165,10 +165,15 @@ export const buyDataCtrl = async (req, res) => {
       amount: req.body.amount,
     });
 
-    res.status(200).json(result);
+    res.status(200).json(result) ;
   } catch (err) {
-    res.status(400).json({
+    res.status(err.statusCode || 400).json({
+      success: false,
       message: err.message,
+      provider: err.provider || null,
     });
+    // res.status(400).json({
+    //   message: err.message,
+    // });
   }
 };

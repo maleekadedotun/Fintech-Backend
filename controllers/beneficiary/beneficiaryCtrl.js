@@ -62,6 +62,7 @@ export const addBeneficiaryCtrl = async (req, res) => {
   }
 };
 
+// all beneficiaries
 export const getBeneficiariesCtrl = async (req, res) => {
   try {
     const beneficiaries = await Beneficiary.find({
@@ -79,6 +80,7 @@ export const getBeneficiariesCtrl = async (req, res) => {
   }
 };
 
+// Delete beneficiary
 export const deleteBeneficiaryCtrl = async (req, res) => {
   try {
     const beneficiary = await Beneficiary.findOneAndDelete({
