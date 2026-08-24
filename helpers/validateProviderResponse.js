@@ -44,49 +44,82 @@
 // export default validateProviderResponse;
 import failTransaction from "./failTransacton.js";
 
+// const validateProviderResponse = async ({
+//     response,
+//     transaction,
+//     sender,
+//     session,
+//     defaultMessage = "Provider request failed",
+// }) => {
+
+//     // SMEPlug success
+//     const smePlugSuccess =
+//         response?.status === true &&
+//         (
+//             !response?.data?.current_status ||
+//             response?.data?.current_status === "successful"
+//         );
+
+//     // VTpass success
+//     const vtpassSuccess =
+//         response?.code === "000" &&
+//         (
+//             response?.response_description === "TRANSACTION SUCCESSFUL" ||
+//             response?.content?.transactions?.status === "delivered"
+//         );
+
+//     if (smePlugSuccess || vtpassSuccess) {
+//         return response;
+//     }
+
+//     await failTransaction({
+//         transaction,
+//         sender,
+//         session,
+//     });
+
+//     throw {
+//         statusCode: 400,
+//         message:
+//             response?.msg ||
+//             response?.message ||
+//             response?.response_description ||
+//             defaultMessage,
+//         provider: response,
+//     };
+// };
+
+// export default validateProviderResponse;
+
+
 const validateProviderResponse = async ({
     response,
     transaction,
     sender,
     session,
-    defaultMessage = "Provider request failed",
+    defaultMessage,
 }) => {
 
-    // SMEPlug success
-    const smePlugSuccess =
+    const isSuccessful =
         response?.status === true &&
-        (
-            !response?.data?.current_status ||
-            response?.data?.current_status === "successful"
+        response?.data?.current_status === "successful";
+
+    if (!isSuccessful) {
+
+        transaction.status = "failed";
+
+        await transaction.save({ session });
+
+        const error = new Error(
+            response?.data?.msg || defaultMessage
         );
 
-    // VTpass success
-    const vtpassSuccess =
-        response?.code === "000" &&
-        (
-            response?.response_description === "TRANSACTION SUCCESSFUL" ||
-            response?.content?.transactions?.status === "delivered"
-        );
+        error.statusCode = 400;
+        error.provider = response;
 
-    if (smePlugSuccess || vtpassSuccess) {
-        return response;
+        throw error;
     }
 
-    await failTransaction({
-        transaction,
-        sender,
-        session,
-    });
-
-    throw {
-        statusCode: 400,
-        message:
-            response?.msg ||
-            response?.message ||
-            response?.response_description ||
-            defaultMessage,
-        provider: response,
-    };
+    return true;
 };
-
 export default validateProviderResponse;

@@ -1,17 +1,18 @@
 import mongoose from "mongoose";
-import Wallet from "../../models/Wallet/Wallet.js";
-import Transaction from "../../models/Transaction/Transaction.js";
-import crypto from "crypto";
-import createNotification from "../../helpers/createNotification.js";
-import { recordRevenue } from "../../helpers/revenueHelpers.js";
+// import Wallet from "../../models/Wallet/Wallet.js";
+// import Transaction from "../../models/Transaction/Transaction.js";
+// import crypto from "crypto";
+// import createNotification from "../../helpers/createNotification.js";
+// import { recordRevenue } from "../../helpers/revenueHelpers.js";
+// // import { createLedgerEntry } from "../../helpers/ledgerHelper.js";
+// import verifyTransactionPin from "../../helpers/verifyTransactionPin.js";
 // import { createLedgerEntry } from "../../helpers/ledgerHelper.js";
-import verifyTransactionPin from "../../helpers/verifyTransactionPin.js";
-import { createLedgerEntry } from "../../helpers/ledgerHelper.js";
-import User from "../../models/User/user.js";
+// import User from "../../models/User/user.js";
 import { buyAirtimeService } from "../../services/airtimeService.js";
+import { getAirtimeNetworks } from "../../services/providers/smePlug/airtime.js";
 
 
-const generateRef = () => crypto.randomBytes(10).toString("hex");
+// const generateRef = () => crypto.randomBytes(10).toString("hex");
 
 
 export const buyAirTimeCtrl = async (req, res) => {
@@ -162,5 +163,44 @@ export const buyAirTimeCtrl = async (req, res) => {
     // });
   } finally {
     session.endSession();
+  }
+};
+
+
+// export const getAirtimeNetworksCtrl = async (req, res) => {
+//   try {
+//     const result = await getAirtimeNetworks();
+//     console.log("REsults", result);
+
+
+//     res.status(200).json(result);
+
+//   } catch (error) {
+//     res.status(500).json({
+//       message: error.message,
+//     });
+//   }
+// };
+
+export const getAirtimeNetworksCtrl = async (req, res) => {
+  try {
+    const result = await getAirtimeNetworks();
+
+    const networks = Object.entries(result.networks).map(
+      ([id, name]) => ({
+        id: Number(id),
+        name,
+      })
+    );
+
+    res.status(200).json({
+      status: result.status,
+      networks,
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: false,
+      message: error.message,
+    });
   }
 };

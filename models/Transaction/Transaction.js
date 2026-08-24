@@ -25,6 +25,11 @@ const transactionSchema = new mongoose.Schema(
       required: true,
     },
 
+    narration: {
+      type: String,
+      // required: true,
+    },
+
     reference: {
       type: String,
       required: true,

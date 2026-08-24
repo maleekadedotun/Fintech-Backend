@@ -1,23 +1,11 @@
-// import client from "./client.js";
-
-// export const getNetworks = async () => {
-//     try {
-//         const { data } = await client.get("/network");
-
-//         return data;
-//     } catch (error) {
-//         throw new Error(
-//             error.response?.data?.message ||
-//             "Unable to fetch networks"
-//         );
-//     }
-// };
 
 import client from "./client.js";
 
 export const getNetworks = async () => {
     try {
         const { data } = await client.get("/networks");
+        console.log("Test", data);
+        
 
         return data;
     } catch (error) {

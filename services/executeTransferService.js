@@ -25,13 +25,17 @@ import { finalizeWalletTransaction } from "../helpers/finalizedWalletTransaction
 
 const generateRef = () => crypto.randomBytes(10).toString("hex");
 
-export const executeTransfer = async ({ senderUserId, receiverAccountNumber, amount, transactionPin, }) => {
+export const executeTransfer = async ({ senderUserId, receiverAccountNumber, amount, transactionPin, narration }) => {
 
     amount = Number(amount);
 
     if (!receiverAccountNumber) {
         throw new Error("Account number is required");
     }
+
+    // if (!narration) {
+    //     throw new Error("Narration is required");
+    // }
 
     if (isNaN(amount) || amount <= 0) {
         throw new Error("Invalid amount");
@@ -73,7 +77,7 @@ export const executeTransfer = async ({ senderUserId, receiverAccountNumber, amo
         const senderWallet = await Wallet.findOne({
             user: senderUserId,
         }).populate("user", "name").session(session);
-        console.log("senderWallet 101:", senderWallet);
+        // console.log("senderWallet 101:", senderWallet);
 
         if (!senderWallet) {
             throw new Error("Sender wallet not found");
@@ -97,7 +101,7 @@ export const executeTransfer = async ({ senderUserId, receiverAccountNumber, amo
         const receiverWallet = await Wallet.findOne({
             accountNumber: receiverAccountNumber,
         }).populate("user", "name");
-        console.log("receiverWallet 101:", receiverWallet);
+        // console.log("receiverWallet 101:", receiverWallet);
 
         // .session(session)
         // .populate("user", "name isFrozen");
@@ -185,7 +189,8 @@ export const executeTransfer = async ({ senderUserId, receiverAccountNumber, amo
                         receiverName: receiverWallet.user.name,
                         receiverAccountNumber: receiverWallet.accountNumber,
 
-                        narration: "Wallet Transfer",
+                        // narration: "Wallet Transfer",
+                        narration: narration || "Wallet Transfer",
                         charges: 0,
                     },
                 },
@@ -203,7 +208,8 @@ export const executeTransfer = async ({ senderUserId, receiverAccountNumber, amo
                         receiverName: receiverWallet.user.name,
                         receiverAccountNumber: receiverWallet.accountNumber,
 
-                        narration: "Wallet Transfer",
+                        // narration: "Wallet Transfer",
+                        narration: narration || "Wallet Transfer",
                         charges: 0,
                     },
                 },

@@ -1,4 +1,5 @@
 import {
+    getAirtimeNetworks,
     purchaseAirtime
 } from "./airtime.js";
 
@@ -9,6 +10,7 @@ import {
 
 export default {
     buyAirtime: purchaseAirtime,
+    getAirtimeNetworks,
     purchaseDataBundle: purchaseData,
     getDataPlans,
 };

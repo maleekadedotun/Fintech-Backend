@@ -1,34 +1,36 @@
-import Transaction from "../../models/Transaction/Transaction.js";
-import Wallet from "../../models/Wallet/Wallet.js";
-import mongoose from "mongoose";
-import crypto from "crypto";
-import createNotification from "../../helpers/createNotification.js";
-import verifyTransactionPin from "../../helpers/verifyTransactionPin.js";
-import User from "../../models/User/user.js";
+// import Transaction from "../../models/Transaction/Transaction.js";
+// import Wallet from "../../models/Wallet/Wallet.js";
+// import mongoose from "mongoose";
+// import crypto from "crypto";
+// import createNotification from "../../helpers/createNotification.js";
+// import verifyTransactionPin from "../../helpers/verifyTransactionPin.js";
+// import User from "../../models/User/user.js";
 import { buyData } from "../../services/data/dataService.js";
-import { dataPlans } from "../../utils/dataPlans.js";
+// import { dataPlans } from "../../utils/dataPlans.js";
+import { getDataPlans } from "../../services/providers/smePlug/data.js";
+import { networks } from "../../config/network.js";
 
 
 
-const generateRef = () => crypto.randomBytes(10).toString("hex");
+// const generateRef = () => crypto.randomBytes(10).toString("hex");
 
 
-export const getDataPlansCtrl = async (req, res) => {
-  const { network } = req.params;
+// export const getDataPlansCtrl = async (req, res) => {
+//   const { network } = req.params;
 
-  const plans = dataPlans[network];
+//   const plans = dataPlans[network];
 
-  if (!plans) {
-    return res.status(404).json({
-      message: "Network not found",
-    });
-  }
+//   if (!plans) {
+//     return res.status(404).json({
+//       message: "Network not found",
+//     });
+//   }
 
-  res.json({
-    network,
-    plans,
-  });
-};
+//   res.json({
+//     network,
+//     plans,
+//   });
+// };
 
 // buy data plan
 
@@ -154,6 +156,124 @@ export const getDataPlansCtrl = async (req, res) => {
 //   }
 // };
 
+
+// export const getDataPlansCtrl = async (req, res) => {
+//   try {
+//     const { network } = req.params;
+
+//     const response = await getDataPlans();
+
+//     const networkMap = {
+//       MTN: "1",
+//       Airtel: "2",
+//       Glo: "3",
+//       "9mobile": "4",
+//     };
+
+//     const networkId = networkMap[network];
+
+//     if (!networkId) {
+//       return res.status(404).json({
+//         status: false,
+//         message: "Network not found",
+//       });
+//     }
+
+//     const plans = response.data[networkId];
+
+//     if (!plans) {
+//       return res.status(404).json({
+//         status: false,
+//         message: "No data plans found for this network",
+//       });
+//     }
+
+//     return res.status(200).json({
+//       status: true,
+//       network,
+//       plans,
+//     });
+
+//   } catch (error) {
+//     console.error("Get data plans error:", error.message);
+
+//     return res.status(500).json({
+//       status: false,
+//       message: error.message,
+//     });
+//   }
+// };
+
+
+// export const getDataPlansCtrl = async (req, res) => {
+//   try {
+//     const response = await getDataPlans();
+
+//     console.log("SMEPlug plans:", JSON.stringify(response, null, 2));
+
+//     return res.status(200).json(response);
+
+//   } catch (error) {
+//     console.error("Get data plans error:", error.message);
+
+//     return res.status(500).json({
+//       status: false,
+//       message: error.message,
+//     });
+//   }
+// };
+
+
+// export const getDataPlansCtrl = async (req, res) => {
+//   try {
+//     const response = await getDataPlans();
+
+//     return res.status(200).json({
+//       status: true,
+//       data: response.data,
+//     });
+
+//   } catch (error) {
+//     console.error("Get data plans error:", error.message);
+
+//     return res.status(500).json({
+//       status: false,
+//       message: error.message,
+//     });
+//   }
+// };
+
+
+export const getDataPlansCtrl = async (req, res) => {
+  try {
+    const { networkId } = req.params;
+
+    const result = await getDataPlans();
+
+    const plans = result.data?.[String(networkId)];
+
+    if (!plans) {
+      return res.status(404).json({
+        message: "Network not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      networkId: Number(networkId),
+      network: networks[networkId]?.name,
+      plans,
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+
 export const buyDataCtrl = async (req, res) => {
   try {
     const result = await buyData({
@@ -162,10 +282,10 @@ export const buyDataCtrl = async (req, res) => {
       networkId: req.body.networkId,
       planId: req.body.planId,
       pin: req.body.pin,
-      amount: req.body.amount,
+      // amount: req.body.amount,
     });
 
-    res.status(200).json(result) ;
+    res.status(200).json(result);
   } catch (err) {
     res.status(err.statusCode || 400).json({
       success: false,

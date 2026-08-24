@@ -42,10 +42,10 @@ const server = http.createServer(app);
 
 app.use(cors());
 app.use(morgan("dev"));
-app.use(express.json());
-
 // web hook stripe payment
 app.use("/api/v1/payment/webhook", express.raw({ type: "application/json" }));
+app.use(express.json());
+
 
 
 
@@ -92,7 +92,10 @@ app.get("/", (req, res) => {
   res.json({ status: "Fintech API running 🚀" });
 });
 
-const PORT = process.env.PORT || 6000;
+const PORT = process.env.PORT || 9000;
 server.listen(PORT, () =>
   console.log(`🚀 Server running on port ${PORT}`)
 );
+
+
+// stripe listen --forward-to localhost:9000/api/v1/payment/webhook

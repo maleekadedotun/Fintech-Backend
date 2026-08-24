@@ -26,6 +26,7 @@ export const getWalletCtrl = async (req, res) => {
   res.json({
     balance: wallet.balance,
     currency: wallet.currency,
+    accountNumber: wallet.accountNumber
   });
 };
 
@@ -81,6 +82,7 @@ export const transferFundsCtrl = async (req, res) => {
     const {
       accountNumber,
       amount,
+      narration,
       transactionPin,
     } = req.body;
 
@@ -88,6 +90,7 @@ export const transferFundsCtrl = async (req, res) => {
       senderUserId: req.userAuth,
       receiverAccountNumber: accountNumber,
       amount,
+      narration,
       transactionPin,
     });
 
@@ -114,15 +117,33 @@ export const getTransactionsCtrl = async (req, res) => {
     if (status) filter.status = status;
 
     // date filter (bank-like history)
+    // if (startDate || endDate) {
+    //   filter.createdAt = {};
+
+    //   if (startDate) {
+    //     filter.createdAt.$gte = new Date(startDate);
+    //   }
+
+    //   if (endDate) {
+    //     filter.createdAt.$lte = new Date(endDate);
+    //   }
+    // }
+
     if (startDate || endDate) {
       filter.createdAt = {};
 
       if (startDate) {
-        filter.createdAt.$gte = new Date(startDate);
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+
+        filter.createdAt.$gte = start;
       }
 
       if (endDate) {
-        filter.createdAt.$lte = new Date(endDate);
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+
+        filter.createdAt.$lte = end;
       }
     }
 
@@ -152,12 +173,47 @@ export const getTransactionsCtrl = async (req, res) => {
 };
 
 
+// export const lookupAccountCtrl = async (req, res) => {
+//   try {
+//     const { accountNumber } = req.params;
+
+//     if (!accountNumber) {
+//       return res.status(400).json({
+//         message: "Account number is required",
+//       });
+//     }
+
+//     const wallet = await Wallet.findOne({
+//       accountNumber,
+//     }).populate("user", "name");
+
+//     if (!wallet) {
+//       return res.status(404).json({
+//         message: "Account not found",
+//       });
+//     }
+
+//     return res.status(200).json({
+//       accountName: wallet.user.name,
+//       accountNumber: wallet.accountNumber,
+//     });
+//   } catch (error) {
+//     console.error(error);
+
+//     return res.status(500).json({
+//       message: "Error looking up account",
+//     });
+//   }
+// };
+
 export const lookupAccountCtrl = async (req, res) => {
   try {
+
     const { accountNumber } = req.params;
 
     if (!accountNumber) {
       return res.status(400).json({
+        success: false,
         message: "Account number is required",
       });
     }
@@ -168,23 +224,38 @@ export const lookupAccountCtrl = async (req, res) => {
 
     if (!wallet) {
       return res.status(404).json({
+        success: false,
         message: "Account not found",
       });
     }
 
+    // Prevent looking up your own account
+    if (wallet.user._id.toString() === req.userAuth) {
+      return res.status(400).json({
+        success: false,
+        message: "You cannot transfer to your own account",
+      });
+    }
+
     return res.status(200).json({
-      accountName: wallet.user.name,
-      accountNumber: wallet.accountNumber,
+      success: true,
+      data: {
+        accountName: wallet.user.name,
+        accountNumber: wallet.accountNumber,
+        bankName: wallet.bankName,
+      },
     });
+
   } catch (error) {
-    console.error(error);
+    console.log("Lookup Error:", error.response?.data);
 
     return res.status(500).json({
+      success: false,
       message: "Error looking up account",
     });
+
   }
 };
-
 
 export const getWalletAnalyticsCtrl = async (req, res) => {
   try {
@@ -355,7 +426,8 @@ export const simulateBankTransferCtrl = async (req, res) => {
 // all transactions
 export const getAllTransactionsCtrl = async (req, res) => {
   try {
-    const transactions = await Transaction.find().sort({ createdAt: -1 });
+    const transactions = await Transaction.find({ user: req.userAuth, }).sort({ createdAt: -1 });
+    // const transactions = await Transaction.find()
 
     res.json({
       data: transactions
@@ -371,7 +443,7 @@ export const getAllTransactionsCtrl = async (req, res) => {
 // single transaction
 export const getSingleTransactionCtrl = async (req, res) => {
   try {
-    const transactionId  = req.params.id;
+    const transactionId = req.params.id;
 
     const transaction = await Transaction.findById(transactionId);
 

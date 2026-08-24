@@ -68,3 +68,22 @@ export const purchaseAirtime = async ({
         throw error;
     }
 };
+
+
+// Get network
+
+export const getAirtimeNetworks = async () => {
+    try {
+        const { data } = await smePlugClient.get("/networks");
+        console.log("Data", data);
+        
+
+        return data;
+
+    } catch (error) {
+        throw new Error(
+            error.response?.data?.message ||
+            "Unable to fetch airtime networks"
+        );
+    }
+};

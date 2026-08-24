@@ -55,6 +55,15 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    pinResetOtp: {
+      type: String,
+      default: null,
+    },
+
+    pinResetOtpExpires: {
+      type: Date,
+      default: null,
+    },
     isFrozen: {
       type: Boolean,
       default: false,

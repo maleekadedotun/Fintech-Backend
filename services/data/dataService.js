@@ -399,7 +399,7 @@ export const buyData = async ({
         }
 
         // Fetch available plans
-        const plansResponse = await getDataPlans(networkId);
+        // const plansResponse = await getDataPlans(networkId);
 
 
         // const plans = Array.isArray(plansResponse.data)
@@ -410,9 +410,23 @@ export const buyData = async ({
         // const plans = Array.isArray(plansResponse.data)
         //     ? plansResponse.data.flat()
         //     : Object.values(plansResponse.data).flat();
-        const plans = normalizeProviderResponse(
-            plansResponse.data
-        );
+        // const plans = normalizeProviderResponse(
+        //     plansResponse.data
+        // );
+
+        // corrected
+        // Fetch all available plans from SMEPlug
+        const plansResponse = await getDataPlans();
+
+        // Get plans belonging to the selected network
+        const networkPlans = plansResponse.data?.[String(networkId)];
+
+        if (!networkPlans) {
+            throw new Error("Network not found");
+        }
+
+        // Normalize the selected network's plans
+        const plans = normalizeProviderResponse(networkPlans);
 
         console.log("========= PLAN DEBUG =========");
         console.log("Received planId:", planId);

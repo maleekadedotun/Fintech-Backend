@@ -4,7 +4,7 @@ import { buyDataCtrl, getDataPlansCtrl } from "../../controllers/dataPlan/dataPl
 
 const dataPlanRouter = express.Router();
 
-dataPlanRouter.get("/data-plans/:network", isLoggedIn, getDataPlansCtrl);
+dataPlanRouter.get("/data-plans/:networkId", isLoggedIn, getDataPlansCtrl);
 dataPlanRouter.post("/data-purchase", isLoggedIn, buyDataCtrl);
 
 export default dataPlanRouter;

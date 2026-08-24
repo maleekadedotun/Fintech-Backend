@@ -4,6 +4,18 @@ import smePlugClient from "./client.js";
 // import client from "./client.js";
 
 
+// export const getDataPlans = async () => {
+//     try {
+//         const { data } = await smePlugClient.get("/data/plans");
+
+//         return data;
+//     } catch (error) {
+//         throw new Error(
+//             error.response?.data?.message ||
+//             "Unable to fetch data plans"
+//         );
+//     }
+// };
 export const getDataPlans = async () => {
     try {
         const { data } = await smePlugClient.get("/data/plans");

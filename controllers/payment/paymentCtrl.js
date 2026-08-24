@@ -20,6 +20,8 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 export const createCheckoutSession = async (req, res) => {
   const { amount } = req.body;
 
+  const reference = crypto.randomBytes(10).toString("hex");
+
   if (amount <= 0) {
     return res.status(400).json({ message: "Invalid amount" });
   }
@@ -45,12 +47,17 @@ export const createCheckoutSession = async (req, res) => {
     metadata: {
       walletId: wallet._id.toString(),
       accountNumber: wallet.accountNumber,
+      reference,
     },
-    success_url: "http://localhost:3000/success",
+    // success_url: `http://localhost:3000/success?amount=${amount}`,
+    success_url: `http://localhost:3000/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: "http://localhost:3000/cancel",
   });
 
-  res.json({ url: session.url });
+  res.json({
+    url: session.url,
+    sessionId: session.id,
+  });
 };
 
 // STRIPE WEBHOOK
@@ -77,24 +84,51 @@ export const stripeWebhook = async (req, res) => {
   if (event.type === "checkout.session.completed") {
     const session = event.data.object;
 
+    console.log("===== CHECKOUT COMPLETED =====");
+
+    console.log("Stripe Session ID:", session.id);
+
+    console.log("Wallet ID:", session.metadata.walletId);
+
+    console.log("Reference:", session.metadata.reference);
+
+    console.log("Amount from Stripe:", session.amount_total);
+
+    console.log(
+      "Amount to credit:",
+      session.amount_total / 100
+    );
+
     const walletId = session.metadata.walletId;
     const amount = session.amount_total / 100;
 
     const wallet = await Wallet.findById(walletId);
-    if (!wallet) return res.status(404).end();
+    // if (!wallet) return res.status(404).end();
+    if (!wallet) {
+      console.log("Wallet not found:", walletId);
+      return res.status(404).end();
+    }
 
+    const balanceBefore = wallet.balance;
     // CREDIT WALLET
     wallet.balance += amount;
     await wallet.save();
 
-    await Transaction.create({
+    console.log(
+      "Wallet balance before:",
+      balanceBefore
+    );
+
+    const transaction = await Transaction.create({
       user: wallet.user,
       type: "credit",
       category: "wallet_fund",
       amount,
-      reference: crypto.randomBytes(10).toString("hex"),
+      // reference: crypto.randomBytes(10).toString("hex"),
+      reference: session.metadata.reference,
       status: "success",
     });
+    console.log("Transaction created:", transaction);
 
     await WebhookLog.create({
       eventId: event.id,
@@ -102,4 +136,111 @@ export const stripeWebhook = async (req, res) => {
   }
 
   res.json({ received: true });
+};
+
+
+// verify payment
+// export const verifyPaymentCtrl = async (req, res) => {
+//   try {
+//     const { sessionId } = req.params;
+
+//     const session = await stripe.checkout.sessions.retrieve(
+//       sessionId
+//     );
+
+//     if (!session) {
+//       return res.status(404).json({
+//         message: "Payment session not found",
+//       });
+//     }
+
+//     return res.status(200).json({
+//       message: "Payment status retrieved",
+//       data: {
+//         sessionId: session.id,
+//         status: session.payment_status,
+//         amount: session.amount_total / 100,
+//         currency: session.currency,
+//       },
+//     });
+
+//   } catch (error) {
+//     return res.status(500).json({
+//       message: error.message,
+//     });
+//   }
+// };
+
+export const verifyPaymentCtrl = async (req, res) => {
+  try {
+
+    const { sessionId } = req.params;
+
+    // const session =
+    //   await stripe.checkout.sessions.retrieve(
+    //     sessionId
+    //   );
+
+
+
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+
+    console.log(
+      "Stripe session metadata:",
+      session.metadata
+    );
+
+    console.log(
+      "Stripe payment status:",
+      session.payment_status
+    );
+
+    if (!session) {
+      return res.status(404).json({
+        message: "Payment session not found",
+      });
+    }
+
+    // console.log("Stripe session:", session);
+    // console.log("Session status:", session.status);
+    // console.log("Payment status:", session.payment_status);
+    // console.log("Amount total:", session.amount_total);
+    // console.log("Metadata:", session.metadata);
+    // console.log("PAYMENT INTENT:", session.payment_intent);
+
+    const transaction =
+      await Transaction.findOne({
+        reference: session.metadata?.reference,
+        user: req.userAuth,
+      });
+
+    return res.status(200).json({
+
+      message: "Payment status retrieved",
+
+      data: {
+
+        sessionId: session.id,
+
+        status: session.payment_status,
+
+        amount: session.amount_total / 100,
+
+        currency: session.currency,
+
+        walletCredited: !!transaction,
+
+        transaction: transaction || null,
+
+      },
+
+    });
+
+  } catch (error) {
+
+    return res.status(500).json({
+      message: error.message,
+    });
+
+  }
 };

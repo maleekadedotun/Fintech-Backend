@@ -101,6 +101,38 @@ const executeBillPayment = async ({
 
         // await transaction.save({ session });
 
+        // await session.commitTransaction();
+
+        // await finalizeWalletTransaction({
+
+        //     wallet: sender.wallet,
+
+        //     balanceBefore: sender.balanceBefore,
+
+        //     balanceAfter: sender.balanceAfter,
+
+        //     reference,
+
+        //     entryType: "debit",
+
+        //     amount,
+
+        //     narration,
+
+        //     notificationTitle,
+
+        //     notificationMessage,
+
+        //     revenue,
+
+        // });
+
+        // const receipt = generateReceipt({
+        //     transaction,
+        //     provider: response,
+        //     walletBalance: sender.balanceAfter,
+        // });
+
         await session.commitTransaction();
 
         await finalizeWalletTransaction({
@@ -127,11 +159,20 @@ const executeBillPayment = async ({
 
         });
 
-        // const receipt = generateReceipt({
-        //     transaction,
-        //     provider: response,
-        //     walletBalance: sender.balanceAfter,
-        // });
+        const receipt = generateReceipt({
+            transaction,
+            provider: response,
+            walletBalance: sender.balanceAfter,
+        });
+
+        console.log("======== PROVIDER RESPONSE ========");
+        console.dir(response, { depth: null });
+        console.log("===================================");
+
+        return {
+            transaction,
+            receipt,
+        };
         generateReceipt({
             transaction,
             provider,

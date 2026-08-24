@@ -13,7 +13,7 @@ const walletRouter = express.Router();
 walletRouter.get("/", getAllWalletCtrl);
 walletRouter.get("/balance", isLoggedIn, getWalletCtrl);
 walletRouter.get("/transactions", isLoggedIn, getTransactionsCtrl);
-walletRouter.get("/transactions/all", getAllTransactionsCtrl);
+walletRouter.get("/all-transactions/",isLoggedIn, getAllTransactionsCtrl);
 walletRouter.get("/transaction/:id", isLoggedIn, getSingleTransactionCtrl);
 walletRouter.post("/transfer", isLoggedIn, transferFundsCtrl);
 walletRouter.post("/simulate-bank-transfer", simulateBankTransferCtrl);

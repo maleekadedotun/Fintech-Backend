@@ -70,6 +70,8 @@ export const loginUserCtrl = async (req, res) => {
       _id: userFound._id,
       name: userFound.name,
       email: userFound.email,
+      role: userFound.role,
+      isAdmin: userFound.isAdmin,
       token: generateToken(userFound._id),
     },
   });

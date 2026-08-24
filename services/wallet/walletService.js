@@ -2,71 +2,108 @@
 import Wallet from "../../models/Wallet/Wallet.js";
 // import Wallet from "../models/Wallet/Wallet.js";
 
-export const debitWallet = async ({ userId, amount, session }) => {
+// export const debitWallet = async ({ userId, amount, session }) => {
 
-    const wallet = await Wallet.findOne({
-        user: userId,
-    }).session(session);
+//     const wallet = await Wallet.findOne({
+//         user: userId,
+//     }).session(session);
 
-    if (!wallet) {
-        throw new Error("Wallet not found");
-    }
+//     if (!wallet) {
+//         throw new Error("Wallet not found");
+//     }
 
-    if (wallet.balance < amount) {
-        throw new Error("Insufficient balance");
-    }
+//     if (wallet.balance < amount) {
+//         throw new Error("Insufficient balance");
+//     }
 
-    // const balanceBefore = wallet.balance;
-    // // const balanceAfter = balanceBefore - amount;
-    // const balanceAfter = await Wallet.findOneAndUpdate(
-    //     {
-    //         user: userId,
-    //         balance: { $gte: amount }
-    //     },
-    //     {
-    //         $inc: {
-    //             balance: -amount,
-    //             dailySpent: amount
-    //         },
-    //         $set: {
-    //             lastTransactionDate: new Date()
-    //         }
-    //     },
-    //     {
-    //         new: true,
-    //         session
-    //     }
-    // );
+//     // const balanceBefore = wallet.balance;
+//     // // const balanceAfter = balanceBefore - amount;
+//     // const balanceAfter = await Wallet.findOneAndUpdate(
+//     //     {
+//     //         user: userId,
+//     //         balance: { $gte: amount }
+//     //     },
+//     //     {
+//     //         $inc: {
+//     //             balance: -amount,
+//     //             dailySpent: amount
+//     //         },
+//     //         $set: {
+//     //             lastTransactionDate: new Date()
+//     //         }
+//     //     },
+//     //     {
+//     //         new: true,
+//     //         session
+//     //     }
+//     // );
 
-    // wallet.balance = balanceAfter;
+//     // wallet.balance = balanceAfter;
 
-    // // wallet.balance -= amount;
-    // wallet.dailySpent += amount;
-    // wallet.lastTransactionDate = new Date();
+//     // // wallet.balance -= amount;
+//     // wallet.dailySpent += amount;
+//     // wallet.lastTransactionDate = new Date();
 
-    // // await wallet.save({ session });
+//     // // await wallet.save({ session });
 
-    // await wallet.save({ session });
-    // return {
-    //     wallet,
-    //     balanceBefore,
-    //     balanceAfter,
-    // };
-    console.log("Debit",{
-        amount,
-        amountType: typeof amount,
-    });
+//     // await wallet.save({ session });
+//     // return {
+//     //     wallet,
+//     //     balanceBefore,
+//     //     balanceAfter,
+//     // };
+//     console.log("Debit",{
+//         amount,
+//         amountType: typeof amount,
+//     });
 
+
+//     const updatedWallet = await Wallet.findOneAndUpdate(
+//         {
+//             user: userId,
+//             balance: { $gte: amount },
+//         },
+//         {
+//             $inc: {
+//                 balance: -amount,
+//                 dailySpent: amount,
+//             },
+//             $set: {
+//                 lastTransactionDate: new Date(),
+//             },
+//         },
+//         {
+//             new: true,
+//             session,
+//         }
+//     );
+
+//     if (!updatedWallet) {
+//         throw new Error("Insufficient balance");
+//     }
+
+//     return {
+//         wallet: updatedWallet,
+//         balanceBefore: updatedWallet.balance + amount,
+//         balanceAfter: updatedWallet.balance,
+//     };
+// };
+
+export const debitWallet = async ({
+    userId,
+    amount,
+    session,
+}) => {
 
     const updatedWallet = await Wallet.findOneAndUpdate(
         {
             user: userId,
-            balance: { $gte: amount },
+            balance: { $gte: Number(amount) },
         },
         {
             $inc: {
-                balance: -amount,
-                dailySpent: amount,
+                balance: -Number(amount),
+                dailySpent: Number(amount),
             },
             $set: {
                 lastTransactionDate: new Date(),
@@ -82,10 +119,14 @@ export const debitWallet = async ({ userId, amount, session }) => {
         throw new Error("Insufficient balance");
     }
 
+    const balanceAfter = updatedWallet.balance;
+    const balanceBefore =
+        balanceAfter + Number(amount);
+
     return {
         wallet: updatedWallet,
-        balanceBefore: updatedWallet.balance + amount,
-        balanceAfter: updatedWallet.balance,
+        balanceBefore,
+        balanceAfter,
     };
 };
 // accountNumber
