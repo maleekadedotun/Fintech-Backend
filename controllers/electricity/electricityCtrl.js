@@ -20,12 +20,19 @@ export const buyElectricityCtrl = async (req, res) => {
         });
 
     } catch (error) {
-        console.log(error, "error");
+        console.log("Electricity Controller Error:", error);
         
-        return res.status(error.statusCode || 400).json({
+        const message =
+            error.response?.data?.response_description ||
+            error.response?.data?.message ||
+            error.response?.data?.msg ||
+            error.message ||
+            "Electricity purchase failed";
+
+        return res.status(error.statusCode || error.response?.status || 400).json({
             success: false,
-            message: error.message,
-            provider: error.provider || null,
+            message,
+            provider: error.provider || error.response?.data || null,
         });
     }
 };

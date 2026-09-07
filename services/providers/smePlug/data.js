@@ -60,7 +60,8 @@ export const purchaseData = async ({
 
 export const testVTpass = async () => {
     const { data } = await vtpassClient.get(
-        "/service-variations?serviceID=dstv"
+        // gotv, dstv, startimes
+        "/service-variations?serviceID=gotv"
     );
 
     console.log(data);
@@ -109,15 +110,29 @@ export const testVTpassEducation = async () => {
     return data;
 };
 
-export const testVTpassBetting = async () => {
-    const { data } = await vtpassClient.get(
-        "/services?identifier=payment"  
-        // "/service-variations?serviceID=sportybet"
-    );
+    export const testVTpassBetting = async () => {
+        const { data } = await vtpassClient.get(
+            // "/services?identifier=payment"
+            "/service-variations?serviceID=sportybet"
+        );
 
-    console.log(data);
+        console.log(data);
 
-    return data;
+        return data;
+    };
+
+    export const getServices = async () => {
+    try {
+        const { data } = await vtpassClient.get("/services");
+
+        console.log(data);
+
+        return data;
+    } catch (error) {
+        console.log(
+            error.response?.data || error.message
+        );
+    }
 };
 
 export const testVTpassInsurance = async () => {

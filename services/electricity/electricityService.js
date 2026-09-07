@@ -16,17 +16,32 @@ export const buyElectricityService = async ({
     return executeBillPayment({
         userId,
         pin,
-        amount,
+        amount: Number(amount),
         category: "electricity",
-
+        metadata: {
+            disco,
+            meterNumber,
+            meterType,
+            phoneNumber,
+        },
         providerAction: ({ reference, user }) =>
             provider.purchaseElectricity({
                 disco,
                 meterNumber,
                 meterType,
-                amount,
-                phoneNumber: user.phoneNumber,
+                amount: Number(amount),
+                phoneNumber: phoneNumber || user?.phoneNumber,
                 reference,
             }),
+        notificationTitle: "Electricity Purchase",
+        notificationMessage: `₦${amount} electricity payment for ${disco} (${meterNumber}) successful`,
+        narration: `Electricity payment - ${disco}`,
+        revenue: {
+            type: "electricity",
+            amount: Number(amount),
+            cost: Number(amount),
+            reference: null,
+            user: userId,
+        },
     });
 };

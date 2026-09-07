@@ -2,7 +2,13 @@ import Transaction from "../models/Transaction/Transaction.js";
 import crypto from "crypto";
 import { debitWallet } from "../services/wallet/walletService.js";
 
-const generateRef = () => crypto.randomBytes(10).toString("hex");
+const generateRef = () => {
+    const now = new Date();
+    const pad = (n) => String(n).padStart(2, "0");
+    const dateStr = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+    const randomHex = crypto.randomBytes(4).toString("hex");
+    return `${dateStr}${randomHex}`;
+};
 
 
 

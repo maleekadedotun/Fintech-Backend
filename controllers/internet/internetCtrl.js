@@ -1,5 +1,7 @@
 import { buyInternetService } from "../../services/internet/internetService.js";
 import providerFactory from "../../services/providers/factory/providerFactory.js";
+import { getInternetPlans } from "../../services/providers/vtpass/internet.js";
+import { internetProviders } from "../../config/internetConfig.js";
 
 export const buyInternetCtrl = async (req, res) => {
     try {
@@ -48,3 +50,52 @@ export const verifyInternetCtrl = async (req, res) => {
         });
     }
 };
+
+/*
+=====================================
+GET INTERNET PLANS
+=====================================
+*/
+
+export const getInternetPlansCtrl = async (req, res) => {
+    try {
+
+        const { providerId } = req.params;
+
+        const plans = await getInternetPlans(providerId);
+
+        return res.status(200).json({
+            success: true,
+            data: plans,
+        });
+
+    } catch (error) {
+
+        console.log("Get Internet Plans Error:", error.message);
+
+        return res.status(error.statusCode || 400).json({
+            success: false,
+            message: error.message,
+        });
+    }
+};
+
+/*
+=====================================
+GET INTERNET PROVIDERS
+=====================================
+*/
+
+export const getInternetProvidersCtrl = async (req, res) => {
+    try {
+        return res.status(200).json({
+            success: true,
+            data: internetProviders,
+        });
+    } catch (error) {
+        return res.status(400).json({
+            success: false,
+            message: error.message,
+        });
+    }
+};

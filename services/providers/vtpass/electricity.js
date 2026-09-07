@@ -22,26 +22,35 @@ export const purchaseElectricity = async ({
     phoneNumber,
     reference,
 }) => {
+    try {
+        const serviceID = electricityProviders[disco] || (typeof disco === "string" ? disco.toLowerCase().trim() : null);
 
-    const serviceID = electricityProviders[disco];
+        if (!serviceID) {
+            throw new Error("Invalid electricity provider (disco)");
+        }
 
-    const payload = {
-        request_id: reference,
-        serviceID,
-        billersCode: meterNumber,
-        variation_code: meterType,
-        amount,
-        phone: phoneNumber,
-    };
-    console.log("PAYLOAD");
-    console.dir(payload, { depth: null });
+        const payload = {
+            request_id: reference,
+            serviceID,
+            billersCode: meterNumber,
+            variation_code: meterType || "prepaid",
+            amount: Number(amount),
+            phone: phoneNumber,
+        };
+        console.log("ELECTRICITY PURCHASE PAYLOAD:");
+        console.dir(payload, { depth: null });
 
-    const { data } = await vtpassClient.post(
-        "/pay",
-        payload
-    );
+        const { data } = await vtpassClient.post(
+            "/pay",
+            payload
+        );
 
-    return data;
+        return data;
+    } catch (error) {
+        console.log("ELECTRICITY PURCHASE ERROR STATUS:", error.response?.status);
+        console.log("ELECTRICITY PURCHASE ERROR DATA:", error.response?.data);
+        throw error;
+    }
 };
 
 export const verifyMeter = async ({
@@ -49,20 +58,23 @@ export const verifyMeter = async ({
     meterNumber,
     meterType,
 }) => {
+    const serviceID = electricityProviders[disco] || (typeof disco === "string" ? disco.toLowerCase().trim() : null);
 
-    const serviceID = electricityProviders[disco];
-    console.log({
-    serviceID,
-    billersCode: meterNumber,
-    type: meterType,
-});
+    if (!serviceID) {
+        throw new Error("Invalid electricity provider (disco)");
+    }
+
+    const payload = {
+        billersCode: meterNumber,
+        serviceID,
+        type: meterType || "prepaid",
+    };
+
+    console.log("ELECTRICITY VERIFY PAYLOAD:", payload);
 
     const { data } = await vtpassClient.post(
         "/merchant-verify",
-        {
-            billersCode: meterNumber,
-            serviceID,
-        }
+        payload
     );
 
     return data;

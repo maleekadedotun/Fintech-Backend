@@ -92,6 +92,37 @@ import failTransaction from "./failTransacton.js";
 // export default validateProviderResponse;
 
 
+// const validateProviderResponse = async ({
+//     response,
+//     transaction,
+//     sender,
+//     session,
+//     defaultMessage,
+// }) => {
+
+//     const isSuccessful =
+//         response?.status === true &&
+//         response?.data?.current_status === "successful";
+
+//     if (!isSuccessful) {
+
+//         transaction.status = "failed";
+
+//         await transaction.save({ session });
+
+//         const error = new Error(
+//             response?.data?.msg || defaultMessage
+//         );
+
+//         error.statusCode = 400;
+//         error.provider = response;
+
+//         throw error;
+//     }
+
+//     return true;
+// };
+
 const validateProviderResponse = async ({
     response,
     transaction,
@@ -100,9 +131,68 @@ const validateProviderResponse = async ({
     defaultMessage,
 }) => {
 
-    const isSuccessful =
+    console.log("======== VALIDATING PROVIDER RESPONSE ========");
+
+    console.dir(response, { depth: null });
+
+    console.log("==============================================");
+
+    /*
+    ==========================================
+    FORMAT 1
+
+    Example:
+    {
+        status: true,
+        data: {
+            current_status: "successful"
+        }
+    }
+    ==========================================
+    */
+
+    const smePlugSuccess =
         response?.status === true &&
         response?.data?.current_status === "successful";
+
+
+    /*
+    ==========================================
+    FORMAT 2
+
+    Example:
+    {
+        code: "000",
+        content: {
+            transactions: {
+                status: "delivered"
+            }
+        },
+        response_description: "TRANSACTION SUCCESSFUL"
+    }
+    ==========================================
+    */
+
+    const vtpassSuccess =
+        response?.code === "000" &&
+        response?.content?.transactions?.status === "delivered";
+
+
+    /*
+    ==========================================
+    FINAL RESULT
+    ==========================================
+    */
+
+    const isSuccessful =
+        smePlugSuccess || vtpassSuccess;
+
+
+    /*
+    ==========================================
+    HANDLE FAILURE
+    ==========================================
+    */
 
     if (!isSuccessful) {
 
@@ -110,15 +200,20 @@ const validateProviderResponse = async ({
 
         await transaction.save({ session });
 
-        const error = new Error(
-            response?.data?.msg || defaultMessage
-        );
+        const errorMessage =
+            response?.data?.msg ||
+            response?.response_description ||
+            defaultMessage;
+
+        const error = new Error(errorMessage);
 
         error.statusCode = 400;
+
         error.provider = response;
 
         throw error;
     }
+
 
     return true;
 };

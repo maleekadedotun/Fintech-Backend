@@ -15,13 +15,14 @@ export const purchaseInternet = async ({
     reference,
 }) => {
     console.log("disco =", disco);
-    console.log("typeof disco =", typeof disco);
 
-    // const serviceID = internetProviders[disco];
-    const provider = internetProviders[Number(disco) - 1];
+    // Look up by serviceID string (e.g. "spectranet", "smile-direct")
+    const provider = internetProviders.find(
+        (p) => p.serviceID === disco || p.serviceID === disco + "-direct"
+    );
 
     if (!provider) {
-        throw new Error("Invalid internet provider");
+        throw new Error(`Invalid internet provider: ${disco}`);
     }
 
     const serviceID = provider.serviceID;
@@ -50,14 +51,15 @@ export const verifyInternet = async ({
     // serviceID,
     billersCode,
 }) => {
-    const provider = internetProviders[Number(disco) - 1];
-
     console.log("disco =", disco);
-    console.log("typeof disco =", typeof disco);
-    console.log("internetProviders =", internetProviders);
+
+    // Look up by serviceID string (e.g. "spectranet", "smile-direct")
+    const provider = internetProviders.find(
+        (p) => p.serviceID === disco || p.serviceID === disco + "-direct"
+    );
 
     if (!provider) {
-        throw new Error("Invalid internet provider");
+        throw new Error(`Invalid internet provider: ${disco}`);
     }
 
     const serviceID = provider.serviceID;
@@ -90,9 +92,14 @@ export const getInternetPlans = async (providerId) => {
     
 
     // const serviceID = internetProviders[providerId];
-    const provider = internetProviders[Number(providerId) - 1];
+    // Look up by serviceID string (e.g. "spectranet", "smile-direct")
+    const provider = internetProviders.find(
+        (p) => p.serviceID === providerId || p.serviceID === providerId + "-direct"
+    );
 
-    // console.log("Provider:", provider);
+    if (!provider) {
+        throw new Error(`Invalid internet provider: ${providerId}`);
+    }
 
     const serviceID = provider.serviceID;
 

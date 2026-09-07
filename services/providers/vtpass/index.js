@@ -28,6 +28,7 @@ export default {
     purchaseInternet,
     getInternetPlans,
     verifyInternet,
+    
     purchaseEducation,
     getEducationPlans,
     purchaseBetting,

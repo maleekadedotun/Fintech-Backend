@@ -68,27 +68,27 @@
 // });
 
 
-export const generateReceipt = ({ transaction, wallet }) => ({
-    receiptNumber: transaction.reference,
-    reference: transaction.reference,
-    date: transaction.createdAt,
+export const generateReceipt = ({ transaction, wallet, walletBalance }) => ({
+    receiptNumber: transaction?.reference,
+    reference: transaction?.reference,
+    date: transaction?.createdAt,
 
-    status: transaction.status,
-    paymentType: transaction.category,
-    provider: transaction.metadata?.provider || "Internal",
+    status: transaction?.status,
+    paymentType: transaction?.category,
+    provider: transaction?.metadata?.provider || "Internal",
 
-    senderName: transaction.metadata?.senderName,
-    senderAccount: transaction.metadata?.senderAccountNumber,
+    senderName: transaction?.metadata?.senderName,
+    senderAccount: transaction?.metadata?.senderAccountNumber,
 
-    receiverName: transaction.metadata?.receiverName,
-    receiverAccount: transaction.metadata?.receiverAccountNumber,
+    receiverName: transaction?.metadata?.receiverName,
+    receiverAccount: transaction?.metadata?.receiverAccountNumber,
 
-    amount: transaction.amount,
-    charges: transaction.metadata?.charges ?? 0,
+    amount: transaction?.amount,
+    charges: transaction?.metadata?.charges ?? 0,
 
-    walletBalance: wallet.balance,
-    accountNumber: wallet.accountNumber,
-    currency: wallet.currency,
+    walletBalance: walletBalance ?? wallet?.balance,
+    accountNumber: wallet?.accountNumber,
+    currency: wallet?.currency,
 
-    narration: transaction.metadata?.narration,
+    narration: transaction?.metadata?.narration,
 });

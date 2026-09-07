@@ -4,7 +4,19 @@ const revenueSchema = new mongoose.Schema(
   {
     type: {
       type: String,
-      enum: ["airtime", "data", "transfer", "wallet_funding", "cable"],
+      enum: [
+        "airtime",
+        "data",
+        "transfer",
+        "wallet_funding",
+        "wallet_fund",
+        "cable",
+        "electricity",
+        "internet",
+        "education",
+        "betting",
+        "insurance",
+      ],
       required: true,
     },
 

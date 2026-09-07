@@ -78,11 +78,12 @@ export const buyCableService = async ({
         variationCode
     );
 
-    const amount = Number(plan.variation_amount);
 
     if (!plan) {
         throw new Error("Invalid cable plan");
     }
+
+    const amount = Number(plan.variation_amount);
 
     // const amount = plan.amount;
 
@@ -98,6 +99,7 @@ export const buyCableService = async ({
             providerId,
             smartCardNumber,
             planId,
+            variationCode,
         },
         providerAction: ({ reference, user, }) =>
             provider.purchaseCable({

@@ -1,7 +1,12 @@
 export const cableProviders = {
-    1: "gotv",
-    2: "dstv",
-    3: "startimes",
+    // 1: "gotv",
+    // 2: "dstv",
+    // 3: "startimes",
+    // 4: "showmax",
+    gotv: "gotv",
+    dstv: "dstv",
+    startimes: "startimes",
+    showmax: "showmax",
 };
 
 // export const cablePlans = {

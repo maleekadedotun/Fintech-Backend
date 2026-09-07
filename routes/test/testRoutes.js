@@ -2,8 +2,22 @@
 
 import express from "express";
 import { getNetworks } from "../../services/providers/smePlug/network.js ";
-import { getDataPlans, purchaseData, tesTvPasstPost, testVTpass, testVTpassBetting, testVTpassEducation, testVTpassInsurance, testVTpassInternet, testVTpassInternetSmile } from "../../services/providers/smeplug/data.js";
+import {
+    getDataPlans, getServices, purchaseData,
+    tesTvPasstPost, testVTpass,
+    testVTpassBetting, testVTpassEducation,
+    testVTpassInsurance, testVTpassInternet,
+    testVTpassInternetSmile
+} from "../../services/providers/smePlug/data.js";
+
 import { purchaseAirtime } from "../../services/providers/smePlug/airtime.js";
+import { electricityProviders } from "../../config/electricityProviders.js";
+// import {
+//     getDataPlans, purchaseData, tesTvPasstPost,
+//     testVTpass, testVTpassBetting,
+//     testVTpassEducation, testVTpassInsurance,
+//     testVTpassInternet, testVTpassInternetSmile
+// } from "../../services/providers/smePlug/data.js";
 
 // import { getNetworks } from "../services/providers/smeplug/network.js";
 
@@ -21,7 +35,66 @@ testRouter.get("/networks", async (req, res) => {
     }
 });
 
+// electricity
+testRouter.get("/electricity/providers", async (req, res) => {
+    try {
+        res.json({
+            success: true,
+            providers: electricityProviders,
+        });
 
+    } catch (error) {
+        res.status(400).json({
+            message: error.message,
+        });
+    }
+});
+
+// testRouter.get("/verify-meter", async (req, res) => {
+//     try {
+//         const result = await verifyMeter({
+//             disco: req.body.disco,
+//             meterNumber: req.body.meterNumber,
+//             meterType: req.body.meterType,
+//         });
+
+//         res.json(result);
+//     } catch (error) {
+//         res.status(400).json({
+//             message: error.message,
+//         });
+//     }
+// });
+
+testRouter.post("/verify-meter", async (req, res) => {
+    try {
+        console.log("REQUEST BODY:");
+        console.dir(req.body, { depth: null });
+
+        const result = await verifyMeter({
+            disco: req.body.disco,
+            meterNumber: req.body.meterNumber,
+            meterType: req.body.meterType,
+        });
+
+        console.log("RESULT:");
+        console.dir(result, { depth: null });
+
+        res.json(result);
+
+    } catch (error) {
+
+        console.log("FULL ERROR:");
+        console.dir(error.response?.data || error, {
+            depth: null
+        });
+
+        res.status(error.response?.status || 400).json({
+            success: false,
+            error: error.response?.data || error.message,
+        });
+    }
+});
 
 testRouter.post("/buy-data", async (req, res) => {
     try {
@@ -136,6 +209,19 @@ testRouter.get("/vtpass-education", async (req, res) => {
 testRouter.get("/vtpass-betting", async (req, res) => {
     try {
         const result = await testVTpassBetting();
+
+        res.json(result);
+    } catch (error) {
+        res.status(400).json({
+            message: error.message,
+        });
+    }
+});
+
+// service
+testRouter.get("/vtpass-services", async (req, res) => {
+    try {
+        const result = await getServices();
 
         res.json(result);
     } catch (error) {

@@ -134,7 +134,7 @@ export const getCableProvidersCtrl = (req, res) => {
 
     const providers = Object.entries(cableProviders).map(
         ([id, serviceID]) => ({
-            id: Number(id),
+            id: isNaN(Number(id)) ? id : Number(id),
             serviceID,
             name:
                 serviceID.charAt(0).toUpperCase() +
@@ -155,8 +155,8 @@ export const getCablePlansCtrl = async (req, res) => {
             await provider.getCablePlans(
                 req.params.providerId
             );
-            // console.log(plans, "Plans");
-            
+        // console.log(plans, "Plans");
+
 
         return res.status(200).json({
             status: "success",

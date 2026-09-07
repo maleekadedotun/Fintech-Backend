@@ -33,7 +33,7 @@ export const educationService = async ({
     // const amount = plan.amount;
 
     if (!plan) {
-        throw new Error("Invalid internet plan");
+        throw new Error("Invalid education plan");
     }
 
     const amount = plan.amount;
@@ -83,7 +83,7 @@ export const educationService = async ({
             });
         },
 
-        notificationTitle: "Internet Subscription",
+        notificationTitle: "Education Purchase",
 
         notificationMessage: `₦${amount} education Purchase successful`,
 

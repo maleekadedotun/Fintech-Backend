@@ -31,7 +31,7 @@ const scheduledTransferSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["active", "paused", "completed"],
+      enum: ["active", "paused", "completed", "processing"],
       default: "active",
     },
   },

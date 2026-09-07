@@ -2,20 +2,24 @@ import { cableProviders } from "../../../config/cableConfig.js";
 import vtpassClient from "../vtpass/client.js";
 
 export const getCablePlans = async (providerId) => {
-    const serviceID = cableProviders[providerId];
-    console.log(serviceID, "serviceId");
+    const serviceID = cableProviders[providerId] || (typeof providerId === "string" ? providerId.toLowerCase() : null);
 
+    if (!serviceID) {
+        throw new Error("Invalid cable provider");
+    }
 
     const { data } = await vtpassClient.get(
         `/service-variations?serviceID=${serviceID}`
     );
-    console.log(JSON.stringify(data, null, 2), "reergreg");
-    console.log("providerId:", providerId);
-    console.log("serviceID:", serviceID);
 
-    return data.content.variations.map(plan => ({
+    const variations = data?.content?.variations || [];
+
+    return variations.map(plan => ({
         code: plan.variation_code,
+        variation_code: plan.variation_code,
+        variationCode: plan.variation_code,
         name: plan.name,
         amount: Number(plan.variation_amount),
+        variation_amount: Number(plan.variation_amount),
     }));
 };

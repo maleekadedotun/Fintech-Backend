@@ -1,3 +1,4 @@
+import { educationProviders } from "../../config/educationConfig.js";
 import { educationService } from "../../services/education/educationService.js";
 import { buyInternetService } from "../../services/internet/internetService.js";
 import providerFactory from "../../services/providers/factory/providerFactory.js";
@@ -66,3 +67,48 @@ export const verifyInternetCtrl = async (req, res) => {
         });
     }
 };
+
+/*
+=====================================
+GET EDUCATION PROVIDERS
+=====================================
+*/
+
+export const getEducationProvidersCtrl = async (req, res) => {
+    try {
+        return res.status(200).json({
+            success: true,
+            data: educationProviders,
+        });
+    } catch (error) {
+        return res.status(400).json({
+            success: false,
+            message: error.message,
+        });
+    }
+};
+
+/*
+=====================================
+GET EDUCATION PLANS
+=====================================
+*/
+
+export const getEducationPlansCtrl = async (req, res) => {
+    try {
+        const { providerId } = req.params;
+        const provider = providerFactory("education");
+        const plans = await provider.getEducationPlans(providerId);
+
+        return res.status(200).json({
+            success: true,
+            data: plans,
+        });
+    } catch (error) {
+        console.log("Get Education Plans Error:", error.message);
+        return res.status(error.statusCode || 400).json({
+            success: false,
+            message: error.message,
+        });
+    }
+};

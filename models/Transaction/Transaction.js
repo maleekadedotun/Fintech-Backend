@@ -16,7 +16,7 @@ const transactionSchema = new mongoose.Schema(
 
     category: {
       type: String,
-      enum: ["wallet_fund", "transfer", "airtime", "data", "cable", "electricity", "internet", "education", "betting","insurance",],
+      enum: ["wallet_fund", "transfer", "airtime", "data", "cable", "electricity", "internet", "education", "betting", "insurance",],
       required: true,
     },
 

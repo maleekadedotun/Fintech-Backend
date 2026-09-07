@@ -15,8 +15,9 @@ export const purchaseEducation = async ({
     console.log("disco =", disco);
     console.log("typeof disco =", typeof disco);
 
-    const provider = educationProviders[disco];
-    // const provider = educationProviders[Number(disco) - 1];
+    const provider = educationProviders[disco] || Object.values(educationProviders).find(
+        (p) => p.serviceID === disco || p.serviceID === String(disco).toLowerCase()
+    );
     console.log("education provider", provider);
 
 
@@ -48,7 +49,9 @@ export const purchaseEducation = async ({
 export const getEducationPlans = async (providerId) => {
     console.log(providerId, "ProviderId");
 
-    const provider = educationProviders[providerId];
+    const provider = educationProviders[providerId] || Object.values(educationProviders).find(
+        (p) => p.serviceID === providerId || p.serviceID === String(providerId).toLowerCase()
+    );
 
     if (!provider) {
         throw new Error("Invalid education provider");
@@ -57,6 +60,7 @@ export const getEducationPlans = async (providerId) => {
     console.log("Provider:", provider);
 
     const serviceID = provider.serviceID;
+
 
     console.log("serviceID:", serviceID);
 

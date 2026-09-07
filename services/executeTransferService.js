@@ -6,7 +6,8 @@ import mongoose from "mongoose";
 // import Transaction from "../models/Transaction/Transaction.js";
 // import { verifyTransactionPin } from "../helpers/verifyTransactionPin.js";
 // import { generateRef } from "../utils/generateRef.js";
-import { isNewDay } from "../utils/isNewDay.js";
+// import { isNewDay } from "../utils/isNewDay.js";
+
 // import { createNotification } from "../helpers/createNotification.js";
 // import { recordRevenue } from "../helpers/recordRevenue.js";
 // import { createLedgerEntry } from "../helpers/createLedgerEntry.js";
@@ -21,11 +22,19 @@ import { createLedgerEntry } from "../helpers/ledgerHelper.js";
 import { emitWalletUpdate } from "../socket/socketEmitter.js";
 import { debitWallet, creditWallet } from "./wallet/walletService.js";
 import { finalizeWalletTransaction } from "../helpers/finalizedWalletTransaction.js";
+import { isNewDay } from "../utils/isNewday.js";
 
 
 const generateRef = () => crypto.randomBytes(10).toString("hex");
 
-export const executeTransfer = async ({ senderUserId, receiverAccountNumber, amount, transactionPin, narration }) => {
+export const executeTransfer = async ({
+    senderUserId,
+    receiverAccountNumber,
+    amount,
+    transactionPin,
+    narration,
+    isScheduled = false,
+}) => {
 
     amount = Number(amount);
 
@@ -33,16 +42,14 @@ export const executeTransfer = async ({ senderUserId, receiverAccountNumber, amo
         throw new Error("Account number is required");
     }
 
-    // if (!narration) {
-    //     throw new Error("Narration is required");
-    // }
-
     if (isNaN(amount) || amount <= 0) {
         throw new Error("Invalid amount");
     }
 
-    // verify transaction pin
-    await verifyTransactionPin(senderUserId, transactionPin);
+    // verify transaction pin if not scheduled
+    if (!isScheduled) {
+        await verifyTransactionPin(senderUserId, transactionPin);
+    }
 
     const session = await mongoose.startSession();
     try {
