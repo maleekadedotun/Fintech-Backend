@@ -46,6 +46,8 @@ export const addBeneficiaryCtrl = async (req, res) => {
     const myWallet = await Wallet.findOne({
       user: req.userAuth,
     });
+    console.log(myWallet);
+    
 
     if (myWallet.accountNumber === accountNumber) {
       return res.status(400).json({
