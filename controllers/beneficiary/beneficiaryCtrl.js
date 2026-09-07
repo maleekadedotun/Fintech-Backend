@@ -1,3 +1,5 @@
+// import Beneficiary from "../../models/Beneficiary/Beneficiary.js";
+// import Beneficiary from "../models/Beneficiary/Beneficiary.js"
 import Beneficiary from "../../models/Beneficiary/Beneficiary.js";
 import Wallet from "../../models/Wallet/Wallet.js";
 

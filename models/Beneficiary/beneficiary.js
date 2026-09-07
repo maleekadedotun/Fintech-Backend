@@ -19,7 +19,7 @@ const beneficiarySchema = new mongoose.Schema(
     },
 
     bankName: {
-      type: String, 
+      type: String,
       default: "Demo Bank",
     },
   },
