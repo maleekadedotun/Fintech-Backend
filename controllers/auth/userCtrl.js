@@ -74,7 +74,7 @@ export const loginUserCtrl = async (req, res) => {
       role: userFound.role,
       isAdmin: userFound.isAdmin,
       tier: userFound.tier || 1,
-      kycStatus: userFound.kycStatus || "pending",
+      kycStatus: userFound.kycStatus || "unverified",
       idType: userFound.idType || null,
       idNumber: userFound.idNumber || null,
       token: generateToken(userFound._id),

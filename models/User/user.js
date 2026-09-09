@@ -37,8 +37,8 @@ const userSchema = new mongoose.Schema(
 
     kycStatus: {
       type: String,
-      enum: ["pending", "verified", "rejected"],
-      default: "pending",
+      enum: ["unverified", "pending", "verified", "rejected"],
+      default: "unverified",
     },
 
     idType: {

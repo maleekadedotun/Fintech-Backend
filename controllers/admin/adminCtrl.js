@@ -4,45 +4,45 @@ import Transaction from "../../models/Transaction/Transaction.js";
 import createNotification from "../../helpers/createNotification.js";
 
 export const getAdminStatsCtrl = async (req, res) => {
-    try {
-        const totalUsers = await User.countDocuments();
+  try {
+    const totalUsers = await User.countDocuments();
 
-        const totalWallets = await Wallet.countDocuments();
+    const totalWallets = await Wallet.countDocuments();
 
-        const transactions = await Transaction.find();
+    const transactions = await Transaction.find();
 
-        const totalTransactions = transactions.length;
+    const totalTransactions = transactions.length;
 
-        const totalCredit = transactions
-            .filter(t => t.type === "credit")
-            .reduce((acc, t) => acc + t.amount, 0);
+    const totalCredit = transactions
+      .filter(t => t.type === "credit")
+      .reduce((acc, t) => acc + t.amount, 0);
 
-        const totalDebit = transactions
-            .filter(t => t.type === "debit")
-            .reduce((acc, t) => acc + t.amount, 0);
+    const totalDebit = transactions
+      .filter(t => t.type === "debit")
+      .reduce((acc, t) => acc + t.amount, 0);
 
-        const kycPending = await User.countDocuments({
-            kycStatus: "pending",
-        });
+    const kycPending = await User.countDocuments({
+      kycStatus: "pending",
+    });
 
-        const kycVerified = await User.countDocuments({
-            kycStatus: "verified",
-        });
+    const kycVerified = await User.countDocuments({
+      kycStatus: "verified",
+    });
 
-        res.json({
-            totalUsers,
-            totalWallets,
-            totalTransactions,
-            totalCredit,
-            totalDebit,
-            kycPending,
-            kycVerified,
-        });
-    } catch (error) {
-        res.status(500).json({
-            message: error.message,
-        });
-    }
+    res.json({
+      totalUsers,
+      totalWallets,
+      totalTransactions,
+      totalCredit,
+      totalDebit,
+      kycPending,
+      kycVerified,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
 };
 
 export const getTopUsersCtrl = async (req, res) => {
@@ -62,9 +62,10 @@ export const getTopUsersCtrl = async (req, res) => {
       },
     ]);
 
-    res.json({ 
-        status: "success",
-        data: topUsers });
+    res.json({
+      status: "success",
+      data: topUsers
+    });
   } catch (error) {
     res.status(500).json({
       message: error.message,
