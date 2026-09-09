@@ -60,17 +60,12 @@ export const executeTransfer = async ({
         if (!user) {
             throw new Error("User not found.");
         }
+
         if (user.isFrozen) {
-            throw new Error("Account is frozen.");
+            throw new Error("Your account has been frozen by administration. Outgoing transfers are disabled.");
         }
 
-        // const session = await mongoose.startSession();
-
         let dailyLimit = 50000;
-
-        // if(user.isFrozen) {
-        //     throw new Error("Your account is frozen.");
-        // }
 
         if (user.tier === 2) {
             dailyLimit = 500000;

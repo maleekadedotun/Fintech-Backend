@@ -70,17 +70,39 @@ export const loginUserCtrl = async (req, res) => {
       _id: userFound._id,
       name: userFound.name,
       email: userFound.email,
+      phoneNumber: userFound.phoneNumber,
       role: userFound.role,
       isAdmin: userFound.isAdmin,
+      tier: userFound.tier || 1,
+      kycStatus: userFound.kycStatus || "pending",
+      idType: userFound.idType || null,
+      idNumber: userFound.idNumber || null,
       token: generateToken(userFound._id),
     },
   });
 };
 
-// @route POST /api/auth/l
-export const fetchAllUserCtrl = async (req, res) => {
+// @desc Get user profile
+// @route GET /api/auth/profile
+export const getProfileCtrl = async (req, res) => {
+  try {
+    const user = await User.findById(req.userAuth).select("-password");
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
-  const users = await User.find();
+    res.json({
+      status: "success",
+      data: user,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @route GET /api/auth/
+export const fetchAllUserCtrl = async (req, res) => {
+  const users = await User.find().select("-password");
   try {
     if (!users) {
       return res.status(401).json({ message: "Users not found" });
@@ -90,8 +112,7 @@ export const fetchAllUserCtrl = async (req, res) => {
       status: "success",
       data: users,
     });
-  }
-  catch (error) {
+  } catch (error) {
     res.status(500).json({ message: "Server Error" });
   }
 };
